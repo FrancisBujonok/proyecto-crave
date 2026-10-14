@@ -1,30 +1,35 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\franc\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj": {}
+    "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj": {}
   },
   "projects": {
-    "C:\\Users\\franc\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj": {
+    "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\franc\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
+        "projectUniqueName": "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
         "projectName": "Crave",
-        "projectPath": "C:\\Users\\franc\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
-        "packagesPath": "C:\\Users\\franc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\franc\\Documents\\GitHub\\proyecto-crave\\Crave\\obj\\",
+        "projectPath": "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
+        "packagesPath": "C:\\Users\\Laboratorio_02\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\franc\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Laboratorio_02\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
-            "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {}
           }
@@ -39,11 +44,10 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.400"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net10.0": {
-          "framework": "net10.0",
           "targetAlias": "net10.0",
           "imports": [
             "net461",
@@ -64,7 +68,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
