@@ -29,3 +29,4 @@ C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\refint\Cr
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.pdb
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.genruntimeconfig.cache
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\ref\Crave.dll
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.sourcelink.json
