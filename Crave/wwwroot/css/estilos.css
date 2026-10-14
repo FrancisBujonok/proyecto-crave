@@ -310,7 +310,8 @@ body::after {
 .banda-contenido { display: flex; flex-direction: column; gap: 24px; }
 .banda .titulo { font-size: clamp(2.25rem, 8.5vw, 4.5rem); }
 .banda p { margin-top: 12px; font-size: 1.125rem; max-width: 40ch; }
-.banda-botones { display: flex; flex-wrap: wrap; gap: 12px; }
+.banda-botones { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }   /* un botón debajo del otro */
+.banda-botones .btn { white-space: nowrap; }
 .banda .btn-borde { box-shadow: inset 0 0 0 2px #fff; color: #fff; }
 .banda .btn-borde:hover { background: #fff; color: var(--rojo); }
 @media (min-width: 860px) { .banda-contenido { flex-direction: row; align-items: center; justify-content: space-between; } }

@@ -1,8 +1,27 @@
 {
   "version": 2,
-  "dgSpecHash": "c8Wd8wAOF/8=",
-  "success": true,
+  "dgSpecHash": "uiJ3mH7KdhE=",
+  "success": false,
   "projectFilePath": "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
-  "expectedPackageFiles": [],
-  "logs": []
+  "expectedPackageFiles": [
+    "C:\\Users\\Laboratorio_02\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.4\\microsoft.entityframeworkcore.10.0.4.nupkg.sha512",
+    "C:\\Users\\Laboratorio_02\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.4\\microsoft.entityframeworkcore.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\Laboratorio_02\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\10.0.4\\microsoft.entityframeworkcore.analyzers.10.0.4.nupkg.sha512",
+    "C:\\Users\\Laboratorio_02\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\10.0.4\\microsoft.entityframeworkcore.relational.10.0.4.nupkg.sha512",
+    "C:\\Users\\Laboratorio_02\\.nuget\\packages\\npgsql\\9.0.5\\npgsql.9.0.5.nupkg.sha512",
+    "C:\\Users\\Laboratorio_02\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\10.0.3\\npgsql.entityframeworkcore.postgresql.10.0.3.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1605",
+      "level": "Error",
+      "message": "Warning As Error: Detected package downgrade: Npgsql from 10.0.3 to 9.0.5. Reference the package directly from the project to select a different version. \r\n Crave -> Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 -> Npgsql (>= 10.0.3) \r\n Crave -> Npgsql (>= 9.0.5)",
+      "projectPath": "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
+      "filePath": "C:\\Users\\Laboratorio_02\\Documents\\GitHub\\proyecto-crave\\Crave\\Crave.csproj",
+      "libraryId": "Npgsql",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }

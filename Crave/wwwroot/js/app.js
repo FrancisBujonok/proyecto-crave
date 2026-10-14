@@ -11,7 +11,7 @@
 const MODO_DEMO = false;
 
 const CONFIG = {
-  whatsapp: "5490000000000",          // ejemplo: reemplazar por el número real del local
+  whatsapp: "5490000000000",          // ejemplo: reemplazar por el número real. Formato: 54 + 9 + código de área sin 0 + número sin 15 (ej.: 5493493123456)
   alias: "CRAVE.PEDIDOS.EJEMPLO",
   titular: "Titular de ejemplo"
 };
@@ -733,6 +733,8 @@ $("#formulario").addEventListener("input", e => {
 });
 $("#formulario").addEventListener("submit", alConfirmar);
 $("#copiar-alias").addEventListener("click", e => copiarTexto(CONFIG.alias, e.currentTarget, "Copiar alias"));
+// Enlace de WhatsApp de la banda final: abre un chat con el número de CONFIG (el mismo que recibe los pedidos)
+$("#enlace-whatsapp").href = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent("Hola CRAVE, quiero hacer una consulta.");
 $("#pago-alias").textContent = CONFIG.alias;
 $("#pago-titular").textContent = CONFIG.titular;
 
