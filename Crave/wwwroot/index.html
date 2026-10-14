@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CRAVE Pedidos</title>
+  <meta name="theme-color" content="#141210">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<!-- ICONOS: se dibujan una vez acá y se reutilizan con <use href="#i-nombre"> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-chevron" viewBox="0 0 20 26"><path d="M3 25 10 9l7 16" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="miter"/></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-menos" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-pausa" viewBox="0 0 24 24"><path d="M8.500 5v14M15.500 5v14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.500 19 12 8 18.500z" fill="currentColor" stroke="currentColor" stroke-width="1.500" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bolsa" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+
+  <!-- Dibujos de producto (provisorios hasta tener las fotos reales) -->
+  <symbol id="i-pollo" viewBox="0 0 64 64">
+    <path d="M27 36 13 50" stroke="#fdfbf7" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="9" cy="48" r="5.5" fill="#fdfbf7"/><circle cx="14" cy="54" r="5.5" fill="#fdfbf7"/>
+    <ellipse cx="41" cy="26" rx="19" ry="16" transform="rotate(-40 41 26)" fill="#e08a00"/>
+    <ellipse cx="39" cy="23" rx="19" ry="16" transform="rotate(-40 39 23)" fill="#ffb800"/>
+    <path d="M28 17c4-6 12-9 20-6" stroke="#ffd870" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-balde" viewBox="0 0 64 64">
+    <ellipse cx="22" cy="17" rx="10" ry="8" transform="rotate(-25 22 17)" fill="#e08a00"/>
+    <ellipse cx="21" cy="15.5" rx="10" ry="8" transform="rotate(-25 21 15.5)" fill="#ffb800"/>
+    <ellipse cx="42" cy="14" rx="10" ry="8" transform="rotate(20 42 14)" fill="#e08a00"/>
+    <ellipse cx="41" cy="12.5" rx="10" ry="8" transform="rotate(20 41 12.5)" fill="#ffb800"/>
+    <path d="M11 25h42l-5.500 33h-31z" fill="#e61919"/>
+    <path d="M25 26l1.400 32M32 26v32M39 26l-1.400 32" stroke="#fdfbf7" stroke-width="4"/>
+    <rect x="8" y="20" width="48" height="8" rx="4" fill="#fdfbf7"/>
+  </symbol>
+  <symbol id="i-taco" viewBox="0 0 64 64">
+    <path d="M4 34h56c0 15-12 24-28 24S4 49 4 34z" fill="#ffb800"/>
+    <path d="M11 44c3 7 10 11 19 12" stroke="#ffd870" stroke-width="3.500" fill="none" stroke-linecap="round"/>
+    <path d="M2 37Q5 25 12 30Q15 19 22 28Q26 17 33 26Q39 17 44 27Q50 19 54 29Q59 25 62 37z" fill="#6dbb4a"/>
+    <rect x="17" y="27" width="7" height="7" rx="1.500" transform="rotate(-14 20 30)" fill="#e61919"/>
+    <rect x="30" y="24" width="7" height="7" rx="1.500" transform="rotate(10 33 27)" fill="#e61919"/>
+    <rect x="43" y="28" width="6" height="6" rx="1.500" transform="rotate(-8 46 31)" fill="#e61919"/>
+    <path d="M4 36h56" stroke="#e08a00" stroke-width="3"/>
+  </symbol>
+  <symbol id="i-papas" viewBox="0 0 64 64">
+    <g fill="#ffb800">
+      <rect x="15" y="9" width="8" height="32" rx="2.500" transform="rotate(-9 19 25)"/>
+      <rect x="24" y="5" width="8" height="34" rx="2.500" transform="rotate(-3 28 22)"/>
+      <rect x="33" y="7" width="8" height="33" rx="2.500" transform="rotate(5 37 23)"/>
+      <rect x="42" y="11" width="8" height="30" rx="2.500" transform="rotate(11 46 26)"/>
+    </g>
+    <path d="M12 34h40l-4.500 24h-31z" fill="#e61919"/>
+    <path d="M26 52l6-10 6 10" stroke="#fdfbf7" stroke-width="3.500" fill="none"/>
+  </symbol>
+  <symbol id="i-gaseosa" viewBox="0 0 64 64">
+    <path d="M35 21 39 8h10" stroke="#ffb800" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="14" y="19" width="36" height="7" rx="3.500" fill="#fdfbf7"/>
+    <path d="M17 26h30l-4 32H21z" fill="#e61919"/>
+    <path d="M18.600 38h26.800l-1 8H19.600z" fill="#fdfbf7"/>
+  </symbol>
+  <symbol id="i-salsa" viewBox="0 0 64 64">
+    <path d="M19 30h26l-3.500 26h-19z" fill="#fdfbf7"/>
+    <path d="M20 30c0-12 7-18 12-18s12 6 12 18z" fill="#e61919"/>
+    <path d="M25 24c1-5 4-8 7-9" stroke="#ff7a70" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<a class="saltar" href="#carta">Saltar a la carta</a>
+<div class="sr" id="aviso" aria-live="polite"></div>
+
+<!-- BARRA SUPERIOR -->
+<header class="barra" id="inicio">
+  <div class="contenedor">
+    <div class="barra-fila">
+      <a class="logo" href="#inicio" translate="no" aria-label="CRAVE, volver al inicio">CR<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>VE</a>
+      <button class="boton-pedido" id="abrir-pedido" type="button" aria-haspopup="dialog">
+        <svg class="icono" aria-hidden="true"><use href="#i-bolsa"/></svg>
+        <span>Mi pedido</span>
+        <span class="insignia" id="insignia" hidden>0</span>
+      </button>
+    </div>
+    <nav class="pastillas" id="pastillas" aria-label="Secciones de la carta"></nav>
+  </div>
+</header>
+
+<main id="principal">
+  <div class="contenedor">
+    <p class="nota-demo">Prototipo con datos de ejemplo. La carta, los precios, el alias de pago y el número de WhatsApp son de prueba.</p>
+  </div>
+
+  <!-- PORTADA -->
+  <section class="portada" aria-labelledby="titulo-portada">
+    <div class="filas" id="filas" aria-hidden="true"></div>
+    <button class="pausa" id="pausa" type="button" aria-pressed="false" aria-label="Pausar animaciones"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-pausa"/></svg></button>
+    <div class="contenedor portada-grilla">
+      <div>
+        <h1 class="titulo-portada" id="titulo-portada">
+          <span class="sr">Feed the craving.</span>
+          <span aria-hidden="true">
+            <span class="linea-titulo"><span>Feed the</span></span>
+            <span class="linea-titulo"><span>CR<svg class="chev"><use href="#i-chevron"/></svg>VING</span></span>
+          </span>
+        </h1>
+        <p class="lede">Pollo frito y tacos en Sunchales. Armá tu pedido, completá tus datos y pagá con transferencia o efectivo.</p>
+        <div class="portada-botones">
+          <a class="btn btn-rojo" href="#carta">Pedir ahora</a>
+          <a class="btn btn-borde" href="#combos">Ver combos</a>
+        </div>
+        <ul class="datos">
+          <li><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>Delivery o retiro en el local</li>
+          <li><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>Transferencia o efectivo</li>
+          <li><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>Demora estimada de 40 a 50 minutos</li>
+        </ul>
+      </div>
+      <div class="sello">
+        <svg class="anillo" viewBox="0 0 200 200" aria-hidden="true">
+          <defs><path id="trazado-anillo" d="M100 100m-80 0a80 80 0 1 1 160 0a80 80 0 1 1-160 0"/></defs>
+          <text><textPath href="#trazado-anillo" textLength="498" lengthAdjust="spacing">POLLO FRITO + TACOS + DELIVERY + SUNCHALES + </textPath></text>
+        </svg>
+        <img src="img/sello.png" width="392" height="392" alt="Logo de CRAVE: Feed the craving" fetchpriority="high">
+      </div>
+    </div>
+  </section>
+
+  <!-- CINTA AMARILLA -->
+  <div class="cinta" aria-hidden="true"><div class="cinta-pista" id="cinta"></div></div>
+
+  <div class="contenedor">
+    <!-- QUÉ SE TE ANTOJA -->
+    <section class="seccion" aria-labelledby="titulo-antojo">
+      <h2 class="titulo" id="titulo-antojo">¿Qué se te antoja?</h2>
+      <div class="antojos" id="antojos"></div>
+    </section>
+
+    <!-- COMBOS -->
+    <section class="seccion" id="combos" data-cat="combos" aria-labelledby="titulo-combos">
+      <div class="titulo-fila">
+        <h2 class="titulo" id="titulo-combos">Combos</h2>
+        <p class="nota">Deslizá para ver todos</p>
+      </div>
+      <ul class="carril" id="carril"></ul>
+    </section>
+
+    <!-- CARTA COMPLETA -->
+    <div id="carta" style="scroll-margin-top:130px"></div>
+    <div id="menu"></div>
+
+    <!-- CÓMO PEDIR -->
+    <section class="seccion" aria-labelledby="titulo-pasos">
+      <h2 class="titulo" id="titulo-pasos">Pedir es fácil</h2>
+      <ol class="pasos">
+        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">1</div><h3>Elegí tu combo</h3><p>Sumá productos desde la carta. El total se actualiza al instante.</p></li>
+        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">2</div><h3>Completá tus datos</h3><p>Nombre, teléfono y dirección si pedís delivery.</p></li>
+        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">3</div><h3>Pagá y recibí</h3><p>Transferí a nuestro alias o pagá en efectivo cuando lo recibís.</p></li>
+      </ol>
+    </section>
+  </div>
+
+  <!-- BANDA FINAL -->
+  <div class="dientes" aria-hidden="true"></div>
+  <section class="banda" aria-labelledby="titulo-banda">
+    <div class="contenedor banda-contenido">
+      <div>
+        <h2 class="titulo" id="titulo-banda">¿Ya sabés qué querés?</h2>
+        <p>Armá tu pedido y lo preparamos al momento.</p>
+      </div>
+      <div class="banda-botones">
+        <button class="btn btn-amarillo" type="button" id="banda-pedido">Ver mi pedido</button>
+        <a class="btn btn-borde" href="https://www.instagram.com/crave.sunchales/" rel="noopener">Instagram @crave.sunchales</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="contenedor pie-fila">
+    <div class="pie-marca">
+      <img src="img/sello.png" width="64" height="64" alt="" loading="lazy">
+      <p translate="no">CRAVE<br>Feed the craving</p>
+    </div>
+    <div class="pie-datos">
+      <p>Sunchales, Santa Fe</p>
+      <p>Horarios y zonas de entrega: a confirmar</p>
+    </div>
+  </div>
+</footer>
+
+<!-- PÍLDORA FLOTANTE (móvil) -->
+<button class="pildora" id="pildora" type="button" aria-haspopup="dialog">
+  <span id="pildora-texto">Ver pedido</span>
+  <span class="pildora-total" id="pildora-total">$ 0</span>
+</button>
+
+<!-- CAJÓN DEL PEDIDO -->
+<div class="velo" id="velo" hidden></div>
+<aside class="cajon" id="cajon" role="dialog" aria-modal="true" aria-labelledby="titulo-cajon" hidden>
+  <div class="cajon-cabeza">
+    <h2 id="titulo-cajon">Tu pedido</h2>
+    <button class="cerrar" id="cerrar" type="button" aria-label="Cerrar pedido"><svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg></button>
+  </div>
+
+  <div class="cajon-cuerpo" id="cajon-cuerpo">
+    <div id="vista-pedido">
+      <div class="vacio" id="vacio" hidden>
+        <p>Todavía no agregaste nada.</p>
+        <button class="btn btn-borde" type="button" id="vacio-cerrar">Ver la carta</button>
+      </div>
+
+      <div id="con-pedido">
+        <ul class="lineas-pedido" id="lineas"></ul>
+        <div class="resumen" id="resumen"></div>
+
+        <form id="formulario" novalidate>
+          <div class="errores-servidor" id="errores-servidor" role="alert" hidden></div>
+
+          <fieldset>
+            <legend>Cómo lo recibís</legend>
+            <div class="opciones">
+              <label class="opcion"><input type="radio" name="modo" value="delivery" checked><span><b>Delivery</b><small>Te lo llevamos</small></span></label>
+              <label class="opcion"><input type="radio" name="modo" value="retiro"><span><b>Retiro</b><small>Lo buscás en el local</small></span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Tus datos</legend>
+            <div class="campo">
+              <label for="f-nombre">Nombre y apellido</label>
+              <input id="f-nombre" name="nombre" type="text" autocomplete="name" placeholder="Ej.: Lucía Gómez…" aria-describedby="e-nombre">
+              <p class="error" id="e-nombre" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="f-telefono">Teléfono</label>
+              <input id="f-telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej.: 3493 15 000000…" aria-describedby="e-telefono a-telefono">
+              <p class="ayuda" id="a-telefono">Lo usamos solo para avisarte por tu pedido.</p>
+              <p class="error" id="e-telefono" hidden></p>
+            </div>
+          </fieldset>
+
+          <fieldset id="grupo-delivery">
+            <legend>Dirección de entrega</legend>
+            <div class="fila-doble">
+              <div class="campo">
+                <label for="f-calle">Calle y número</label>
+                <input id="f-calle" name="calle" type="text" autocomplete="address-line1" placeholder="Ej.: Bv. Ejemplo 1234…" aria-describedby="e-calle">
+                <p class="error" id="e-calle" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="f-piso">Piso o depto <span class="opcional">(opcional)</span></label>
+                <input id="f-piso" name="piso" type="text" autocomplete="address-line2" placeholder="Ej.: 2°B…">
+              </div>
+            </div>
+            <div class="campo">
+              <label for="f-zona">Zona de entrega</label>
+              <select id="f-zona" name="zona" aria-describedby="e-zona"></select>
+              <p class="error" id="e-zona" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="f-ref">Referencias <span class="opcional">(opcional)</span></label>
+              <textarea id="f-ref" name="referencias" autocomplete="off" placeholder="Ej.: portón negro, el timbre no funciona…"></textarea>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Cuándo lo querés</legend>
+            <div class="opciones">
+              <label class="opcion"><input type="radio" name="cuando" value="ya" checked><span><b>Lo antes posible</b><small>Demora de 40 a 50 min</small></span></label>
+              <label class="opcion"><input type="radio" name="cuando" value="prog"><span><b>Programarlo</b><small>Elegís el horario</small></span></label>
+            </div>
+            <div class="campo" id="grupo-hora" hidden>
+              <label for="f-hora">Horario</label>
+              <input id="f-hora" name="hora" type="time" aria-describedby="e-hora">
+              <p class="error" id="e-hora" hidden></p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Cómo pagás</legend>
+            <div class="opciones">
+              <label class="opcion"><input type="radio" name="pago" value="transferencia" checked><span><b>Transferencia</b><small>Desde tu app o homebanking</small></span></label>
+              <label class="opcion"><input type="radio" name="pago" value="efectivo"><span><b>Efectivo</b><small>Al recibir o retirar</small></span></label>
+            </div>
+            <div class="caja-pago" id="pago-transferencia">
+              <dl>
+                <dt>Alias</dt><dd id="pago-alias" translate="no"></dd>
+                <dt>Titular</dt><dd id="pago-titular"></dd>
+                <dt>Importe</dt><dd id="pago-importe"></dd>
+              </dl>
+              <button class="copiar" type="button" id="copiar-alias">Copiar alias</button>
+              <p class="ayuda">Hacé la transferencia después de confirmar el pedido y mandanos el comprobante por WhatsApp.</p>
+            </div>
+            <div class="campo" id="pago-efectivo" hidden>
+              <label for="f-efectivo">¿Con cuánto abonás? <span class="opcional">(opcional)</span></label>
+              <input id="f-efectivo" name="efectivo" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej.: 20000…" aria-describedby="a-efectivo e-efectivo">
+              <p class="ayuda" id="a-efectivo">Así llevamos el vuelto justo. Dejalo vacío si pagás exacto.</p>
+              <p class="error" id="e-efectivo" hidden></p>
+            </div>
+          </fieldset>
+
+          <div class="campo">
+            <label for="f-notas">Aclaraciones del pedido <span class="opcional">(opcional)</span></label>
+            <textarea id="f-notas" name="notas" autocomplete="off" placeholder="Ej.: sin picante, salsas aparte…"></textarea>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="final" id="vista-final" hidden></div>
+    <div class="confeti" id="confeti" aria-hidden="true"></div>
+  </div>
+
+  <div class="cajon-pie" id="cajon-pie">
+    <div class="total-pie"><span>Total</span><strong id="total-pie">$ 0</strong></div>
+    <button class="btn btn-rojo" type="submit" form="formulario" id="boton-confirmar">Confirmar pedido</button>
+  </div>
+</aside>
+
+<script src="js/menu-demo.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
