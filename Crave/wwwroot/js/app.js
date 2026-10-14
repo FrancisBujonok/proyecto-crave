@@ -2,7 +2,7 @@
    CRAVE - lógica de la página
    Leelo de arriba hacia abajo:
    1 Configuración   2 Estado   3 Ayudantes   4 Dibujar la página   5 Carrito
-   6 Formulario   7 Cajón   8 Confirmación   9 Animaciones   10 Arranque
+   6 Formulario y horarios   7 Cajón   8 Confirmación   9 Animaciones   10 Arranque
    ===================================================================== */
 
 // ---------- 1. CONFIGURACIÓN ----------
@@ -16,10 +16,16 @@ const CONFIG = {
   titular: "Titular de ejemplo"
 };
 
+// Solo para el modo demo: imita lo que hace HorarioService.cs en el servidor.
+// En el modo real estos números se configuran en C# y esta constante no se usa.
+const DEMO_HORARIOS = { apertura: "20:00", ultima: "23:30", cadaMinutos: 15, cupo: 4, ahora: "19:40", preparacion: 30 };
+
 // ---------- 2. ESTADO (los datos que cambian) ----------
 let menu = { categorias: [], zonas: [] };
 let productos = {};      // id -> producto, para encontrarlo rápido
 let carrito = {};        // id -> cantidad. Ejemplo: { p4: 2, ga: 1 }
+let franjas = [];        // horarios de hoy: [{ hora: "21:15", libres: 3 }, ...]
+let franjasError = "";  // texto para mostrar si no hay horarios o no se pudieron cargar
 let quienAbrio = null;   // botón que abrió el cajón, para devolverle el foco al cerrar
 
 // ---------- 3. AYUDANTES ----------
@@ -30,7 +36,7 @@ const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 // Convierte texto en algo seguro para meter dentro de HTML
 function esc(texto) {
-  return String(texto).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return String(texto ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 // Dibuja un icono de los que están definidos arriba en index.html
@@ -62,7 +68,7 @@ function dibujarFilas() {
   $("#filas").innerHTML = html;
 }
 
-// Cinta amarilla: el mismo grupo dos veces para que el loop no tenga saltos
+// Cinta blanca: el mismo grupo dos veces para que el loop no tenga saltos
 function dibujarCinta() {
   const frases = ["Pollo frito crocante", "Tacos", "Delivery en Sunchales", "Transferencia o efectivo", "Feed the craving"];
   let grupo = '<div class="cinta-grupo">';
@@ -141,6 +147,89 @@ function dibujarCarta() {
       </div>
       <ul class="grilla">${c.productos.map(tarjetaHTML).join("")}</ul>
     </section>`).join("");
+}
+
+// ----- Horarios con cupo -----
+// "20:15" -> minutos desde medianoche (1215). Sirve para sumar y comparar horas.
+function aMinutos(texto) { const [h, m] = texto.split(":"); return Number(h) * 60 + Number(m); }
+function aTexto(minutos) { return String(Math.floor(minutos / 60)).padStart(2, "0") + ":" + String(minutos % 60).padStart(2, "0"); }
+
+// Modo demo: arma los horarios como lo haría el servidor. Algunos ya vienen llenos para mostrar cómo se ven.
+let ocupadosDemo = { "20:15": 3, "20:30": 4, "21:00": 2, "21:30": 4 };   // hora -> pedidos ya tomados
+function franjasDeEjemplo() {
+  const d = DEMO_HORARIOS;
+  const minimo = aMinutos(d.ahora) + d.preparacion;
+  const lista = [];
+  for (let t = aMinutos(d.apertura); t <= aMinutos(d.ultima); t += d.cadaMinutos) {
+    if (t < minimo) continue;
+    const hora = aTexto(t);
+    lista.push({ hora: hora, libres: Math.max(d.cupo - (ocupadosDemo[hora] || 0), 0) });
+  }
+  return lista;
+}
+
+async function cargarFranjas() {
+  if (MODO_DEMO) { franjas = franjasDeEjemplo(); franjasError = ""; return; }
+  try {
+    const respuesta = await fetch("/api/franjas");
+    if (!respuesta.ok) throw new Error("franjas");
+    const datos = await respuesta.json();
+    franjas = datos.franjas;
+    franjasError = datos.aviso;          // el servidor manda un texto para usar si no queda ningún lugar
+  } catch (e) {
+    franjas = [];
+    franjasError = "No pudimos cargar los horarios.";
+  }
+}
+
+// El horario marcado ("" si todavía no hay botones de horario o ninguno está elegido)
+function horaElegida() {
+  const marcado = $('input[name="hora"]:checked');
+  return marcado ? marcado.value : "";
+}
+
+function hayHorario() { return franjas.some(f => f.libres > 0); }
+
+// Texto chico debajo de cada hora
+function textoCupo(libres) {
+  if (libres <= 0) return "Completo";
+  if (libres === 1) return "Último lugar";
+  if (libres === 2) return "Quedan 2";
+  return "Hay lugar";
+}
+
+// Dibuja los botones de horario. Mantiene la elección anterior si todavía tiene lugar;
+// si no, deja marcado el primero disponible.
+function dibujarFranjas() {
+  const anterior = horaElegida();
+  const elegido = franjas.some(f => f.hora === anterior && f.libres > 0)
+    ? anterior
+    : (franjas.find(f => f.libres > 0) || {}).hora;
+
+  $("#f-hora").innerHTML = franjas.map(f => {
+    const completa = f.libres <= 0;
+    const clases = "franja" + (completa ? " completa" : "") + (f.libres === 1 ? " ultimo" : "");
+    return '<label class="' + clases + '"><input type="radio" name="hora" value="' + f.hora + '"'
+      + (completa ? " disabled" : "") + (f.hora === elegido ? " checked" : "") + ">"
+      + "<b>" + f.hora + "</b><small>" + textoCupo(f.libres) + "</small></label>";
+  }).join("");
+
+  const aviso = $("#aviso-franjas");
+  aviso.hidden = hayHorario();
+  if (!hayHorario()) {
+    aviso.innerHTML = esc(franjasError || "Por hoy no quedan horarios disponibles.")
+      + '<br><button type="button" class="copiar" data-reintentar="franjas">Volver a mirar</button>';
+  }
+  actualizarBotonConfirmar();
+}
+
+function actualizarBotonConfirmar() {
+  $("#boton-confirmar").disabled = !hayHorario();
+}
+
+async function refrescarFranjas() {
+  await cargarFranjas();
+  dibujarFranjas();
 }
 
 function llenarZonas() {
@@ -257,7 +346,7 @@ function actualizarTodo() {
 function sincronizarFormulario() {
   const f = $("#formulario").elements;
   $("#grupo-delivery").hidden = f.modo.value !== "delivery";
-  $("#grupo-hora").hidden = f.cuando.value !== "prog";
+  $("#legend-horario").textContent = f.modo.value === "delivery" ? "Horario de entrega" : "Horario de retiro";
   $("#pago-transferencia").hidden = f.pago.value !== "transferencia";
   $("#pago-efectivo").hidden = f.pago.value !== "efectivo";
   actualizarTodo();
@@ -294,9 +383,7 @@ function validarFormulario() {
     exigir("#f-calle", f.calle.value.trim().length >= 4, "Escribí la calle y el número.");
     exigir("#f-zona", !!zonaElegida(), "Elegí la zona para calcular el envío.");
   }
-  if (f.cuando.value === "prog") {
-    exigir("#f-hora", f.hora.value !== "", "Elegí a qué hora lo querés.");
-  }
+  exigir("#f-hora", horaElegida() !== "", "Elegí en qué horario lo querés.");
   if (f.pago.value === "efectivo" && f.efectivo.value.trim() !== "") {
     const abona = parseInt(f.efectivo.value.replace(/\D/g, ""), 10) || 0;
     exigir("#f-efectivo", abona >= calcularTotal(), "El importe tiene que ser igual o mayor al total (" + dinero.format(calcularTotal()) + ").");
@@ -317,8 +404,7 @@ function leerPedidoDelFormulario() {
     piso: f.piso.value.trim(),
     zonaId: f.zona.value,
     referencias: f.referencias.value.trim(),
-    cuando: f.cuando.value,
-    hora: f.hora.value,
+    hora: horaElegida(),
     pago: f.pago.value,
     abonaCon: parseInt(f.efectivo.value.replace(/\D/g, ""), 10) || 0,
     notas: f.notas.value.trim(),
@@ -330,6 +416,7 @@ function leerPedidoDelFormulario() {
 async function enviarPedido(datos) {
   if (MODO_DEMO) {
     await new Promise(r => setTimeout(r, 700));   // simula la espera del servidor
+    ocupadosDemo[datos.hora] = (ocupadosDemo[datos.hora] || 0) + 1;   // el horario pierde un lugar
     return { ok: true, pedido: pedidoDeEjemplo(datos) };
   }
   try {
@@ -339,7 +426,8 @@ async function enviarPedido(datos) {
       body: JSON.stringify(datos)
     });
     const json = await respuesta.json();
-    if (!respuesta.ok) return { ok: false, errores: json.errores || ["No pudimos registrar el pedido. Probá de nuevo."] };
+    // 400 = datos inválidos, 409 = el horario se llenó justo antes. En ambos casos el servidor manda "errores".
+    if (!respuesta.ok) return { ok: false, errores: json.errores || ["No pudimos registrar el pedido. Probá de nuevo."], conflicto: respuesta.status === 409 };
     return { ok: true, pedido: json };
   } catch (e) {
     return { ok: false, errores: ["No hay conexión con el servidor. Revisá tu internet y probá de nuevo."] };
@@ -356,6 +444,7 @@ function pedidoDeEjemplo(datos) {
   return {
     numero: "CR-" + (1000 + Math.floor(Math.random() * 9000)),
     nombre: datos.nombre,
+    hora: datos.hora,
     direccion: datos.modo === "delivery" ? datos.calle + (datos.piso ? " (" + datos.piso + ")" : "") + ", " + (zona ? zona.nombre : "") : "Retiro en el local",
     subtotal: subtotal, envio: envio, total: total, lineas: lineas,
     vuelto: (datos.pago === "efectivo" && datos.abonaCon > 0) ? datos.abonaCon - total : 0
@@ -380,28 +469,31 @@ async function alConfirmar(evento) {
   const datos = leerPedidoDelFormulario();
   const resultado = await enviarPedido(datos);
 
-  boton.disabled = false;
   boton.textContent = "Confirmar pedido";
 
   if (!resultado.ok) {
+    await refrescarFranjas();   // los lugares pudieron cambiar: mostramos los números de ahora
     const caja = $("#errores-servidor");
     caja.innerHTML = "<ul>" + resultado.errores.map(e => "<li>" + esc(e) + "</li>").join("") + "</ul>";
     caja.hidden = false;
     caja.scrollIntoView({ block: "nearest" });
     return;
   }
+  actualizarBotonConfirmar();
 
   carrito = {};
   guardarCarrito();
   $("#formulario").reset();
   mostrarConfirmacion(resultado.pedido, datos);
   sincronizarFormulario();
+  refrescarFranjas();       // para el próximo pedido
 }
 
 // ---------- 7. CAJÓN ----------
 function abrirCajon(desde) {
   quienAbrio = desde || document.activeElement;
   actualizarTodo();
+  refrescarFranjas();   // los lugares cambian todo el tiempo: pedimos los números de ahora
   const cajon = $("#cajon"), velo = $("#velo");
   cajon.hidden = false;
   velo.hidden = false;
@@ -452,7 +544,7 @@ function copiarTexto(texto, boton, etiqueta) {
 function textoParaWhatsApp(pedido, datos) {
   const l = ["Pedido CRAVE " + pedido.numero, "Nombre: " + pedido.nombre, "Teléfono: " + datos.telefono];
   l.push("Entrega: " + (datos.modo === "delivery" ? "delivery a " + pedido.direccion + (datos.referencias ? ". Ref.: " + datos.referencias : "") : "retiro en el local"));
-  l.push("Horario: " + (datos.cuando === "prog" ? datos.hora + " hs" : "lo antes posible"), "");
+  l.push("Horario: " + datos.hora + " hs", "");
   pedido.lineas.forEach(x => l.push(x.cantidad + " x " + x.nombre + " — " + dinero.format(x.cantidad * x.precio)));
   l.push("", "Subtotal: " + dinero.format(pedido.subtotal), "Envío: " + dinero.format(pedido.envio), "Total: " + dinero.format(pedido.total));
   l.push("Pago: " + (datos.pago === "transferencia" ? "transferencia (envío comprobante)" : "efectivo" + (datos.abonaCon ? ", abono con " + dinero.format(datos.abonaCon) : ", pago exacto")));
@@ -473,7 +565,7 @@ function mostrarConfirmacion(pedido, datos) {
   $("#vista-final").innerHTML = `
     <svg class="tilde" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="36"/><path d="M28 45l11 11 22-24"/></svg>
     <h3 id="final-titulo" tabindex="-1">Pedido <span style="white-space:nowrap">${esc(pedido.numero)}</span> registrado</h3>
-    <p class="ayuda" style="margin-top:8px">${datos.modo === "delivery" ? "Te lo llevamos a " + esc(pedido.direccion) : "Lo retirás en el local"}. ${datos.cuando === "prog" ? "Horario: " + esc(datos.hora) + " hs." : "Demora estimada de 40 a 50 minutos."}</p>
+    <p class="ayuda" style="margin-top:8px">${datos.modo === "delivery" ? "Te lo llevamos a " + esc(pedido.direccion) : "Lo retirás en el local"}. Horario: ${esc(datos.hora)} hs.</p>
     <ul class="lineas-pedido" style="margin-top:14px">
       ${pedido.lineas.map(x => `<li><div><b>${x.cantidad} × ${esc(x.nombre)}</b></div><div class="importe">${dinero.format(x.cantidad * x.precio)}</div></li>`).join("")}
     </ul>
@@ -514,7 +606,7 @@ function volverAlPedido() {
 }
 
 // ---------- 9. ANIMACIONES ----------
-// Un punto amarillo vuela desde el botón "+" hasta el botón "Mi pedido"
+// Un punto rojo vuela desde el botón "+" hasta el botón "Mi pedido"
 function volarAlCarrito(origen) {
   if (sinMovimiento.matches) { rebotarInsignia(); return; }
   const a = origen.getBoundingClientRect();
@@ -543,10 +635,10 @@ function rebotarInsignia() {
   );
 }
 
-// Chevrones de colores que caen al confirmar el pedido
+// Chevrones rojos y blancos que caen al confirmar el pedido
 function lanzarConfeti() {
   if (sinMovimiento.matches) return;
-  const colores = ["#e61919", "#ffb800", "#fdfbf7"];
+  const colores = ["#d62828", "#f5f5f5", "#d62828"];
   let html = "";
   for (let i = 0; i < 24; i++) {
     const x = Math.round(Math.random() * 100);
@@ -605,6 +697,7 @@ function seguirSeccion() {
 // ---------- 10. ARRANQUE ----------
 // Un solo "escuchador" de clicks para todos los botones "+", "-" y los enlaces internos
 document.addEventListener("click", evento => {
+  if (evento.target.closest("[data-reintentar]")) { refrescarFranjas(); return; }
   const boton = evento.target.closest("[data-accion]");
   if (boton) {
     cambiarCantidad(boton.dataset.id, boton.dataset.accion === "sumar" ? 1 : -1, boton);
@@ -634,7 +727,10 @@ $("#vacio-cerrar").addEventListener("click", () => { cerrarCajon(); $("#carta").
 document.addEventListener("keydown", atraparFoco);
 
 $("#formulario").addEventListener("change", sincronizarFormulario);
-$("#formulario").addEventListener("input", e => { if (e.target.getAttribute("aria-invalid")) limpiarError(e.target); });
+$("#formulario").addEventListener("input", e => {
+  if (e.target.getAttribute("aria-invalid")) limpiarError(e.target);
+  if (e.target.name === "hora") limpiarError($("#f-hora"));   // los horarios son varios radios dentro de un grupo
+});
 $("#formulario").addEventListener("submit", alConfirmar);
 $("#copiar-alias").addEventListener("click", e => copiarTexto(CONFIG.alias, e.currentTarget, "Copiar alias"));
 $("#pago-alias").textContent = CONFIG.alias;
@@ -657,6 +753,8 @@ async function iniciar() {
   dibujarCombos();
   dibujarCarta();
   llenarZonas();
+  await cargarFranjas();
+  dibujarFranjas();
   sincronizarFormulario();
 
   activarReveal();

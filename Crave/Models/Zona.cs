@@ -1,6 +1,6 @@
 namespace Crave.Models;
 
-// Una zona de entrega con su costo de envío.
+// Una zona de entrega con su costo de envío. Fila de la tabla "zonas".
 public class Zona
 {
     public string Id { get; set; } = "";

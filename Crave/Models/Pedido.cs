@@ -18,8 +18,7 @@ public class PedidoNuevo
     public string Piso { get; set; } = "";
     public string ZonaId { get; set; } = "";
     public string Referencias { get; set; } = "";
-    public string Cuando { get; set; } = "ya";               // "ya" o "prog" (programado)
-    public string Hora { get; set; } = "";
+    public string Hora { get; set; } = "";                   // horario elegido, ej.: "21:15" (sale de /api/franjas)
     public string Pago { get; set; } = "transferencia";      // "transferencia" o "efectivo"
     public int AbonaCon { get; set; }                        // con cuánto paga en efectivo (0 = exacto)
     public string Notas { get; set; } = "";
@@ -43,6 +42,7 @@ public class PedidoCreado
     public string Telefono { get; set; } = "";
     public string Modo { get; set; } = "";
     public string Direccion { get; set; } = "";
+    public string Hora { get; set; } = "";
     public string Pago { get; set; } = "";
     public int Subtotal { get; set; }
     public int Envio { get; set; }
