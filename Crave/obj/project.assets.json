@@ -54,15 +54,15 @@
           }
         }
       },
-      "Npgsql/9.0.5": {
+      "Npgsql/10.0.3": {
         "type": "package",
         "compile": {
-          "lib/net8.0/Npgsql.dll": {
+          "lib/net10.0/Npgsql.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net8.0/Npgsql.dll": {
+          "lib/net10.0/Npgsql.dll": {
             "related": ".xml"
           }
         }
@@ -148,19 +148,21 @@
         "microsoft.entityframeworkcore.relational.nuspec"
       ]
     },
-    "Npgsql/9.0.5": {
-      "sha512": "NRZkUlTUh06f7f14wriEoO+BrJcyw/agh3xozXLM3ii7C/08SyXqcI89EMfZJuHkOcfDU8W0enGcZ8RGNVOw0w==",
+    "Npgsql/10.0.3": {
+      "sha512": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w==",
       "type": "package",
-      "path": "npgsql/9.0.5",
+      "path": "npgsql/10.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "lib/net6.0/Npgsql.dll",
-        "lib/net6.0/Npgsql.xml",
+        "lib/net10.0/Npgsql.dll",
+        "lib/net10.0/Npgsql.xml",
         "lib/net8.0/Npgsql.dll",
         "lib/net8.0/Npgsql.xml",
-        "npgsql.9.0.5.nupkg.sha512",
+        "lib/net9.0/Npgsql.dll",
+        "lib/net9.0/Npgsql.xml",
+        "npgsql.10.0.3.nupkg.sha512",
         "npgsql.nuspec",
         "postgresql.png"
       ]
@@ -183,7 +185,6 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "Npgsql >= 9.0.5",
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 10.0.3"
     ]
   },
@@ -237,10 +238,6 @@
       "net10.0": {
         "targetAlias": "net10.0",
         "dependencies": {
-          "Npgsql": {
-            "target": "Package",
-            "version": "[9.0.5, )"
-          },
           "Npgsql.EntityFrameworkCore.PostgreSQL": {
             "target": "Package",
             "version": "[10.0.3, )"
@@ -682,16 +679,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Npgsql from 10.0.3 to 9.0.5. Reference the package directly from the project to select a different version. \r\n Crave -> Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 -> Npgsql (>= 10.0.3) \r\n Crave -> Npgsql (>= 9.0.5)",
-      "libraryId": "Npgsql",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }
