@@ -4,17 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>CRAVE Pedidos</title>
-  <meta name="theme-color" content="#141210">
+  <meta name="theme-color" content="#111111">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
 
 <!-- ICONOS: se dibujan una vez acá y se reutilizan con <use href="#i-nombre"> -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <symbol id="i-chevron" viewBox="0 0 20 26"><path d="M3 25 10 9l7 16" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="miter"/></symbol>
+  <!-- La "A" del logo de CRAVE (vectorizada del archivo original) -->
+  <symbol id="i-a" viewBox="0 0 100 105.32"><path fill="currentColor" d="M49.86 1.29 L47.13 6.75 L43.39 14.94 L43.1 15.23 L41.38 19.25 L39.08 23.71 L36.78 28.88 L36.21 29.74 L34.48 33.76 L31.32 40.09 L31.03 41.09 L30.03 42.82 L27.3 48.85 L27.01 49.14 L26.44 50.72 L25.29 52.73 L24.43 54.89 L24.14 55.17 L20.4 63.36 L17.24 69.68 L16.81 70.98 L16.24 71.84 L10.34 84.63 L9.48 86.06 L9.2 87.07 L8.05 89.08 L3.74 98.56 L1.29 103.45 L1.29 103.88 L27.16 103.88 L27.73 100.14 L28.59 97.41 L30.03 94.25 L31.75 91.52 L32.9 90.09 L35.92 87.07 L37.64 85.78 L41.09 83.91 L42.96 78.3 L48.71 62.93 L48.85 62.07 L49.28 61.35 L49.57 60.2 L49.86 59.91 L50.29 60.49 L50.57 61.78 L51.72 64.51 L52.44 66.95 L53.02 68.1 L58.62 83.91 L60.63 84.77 L63.07 86.35 L64.8 87.79 L67.82 91.09 L69.83 94.25 L71.26 97.41 L72.13 100.29 L72.56 103.74 L98.42 103.74 L97.84 102.16 L91.24 88.51 L88.94 83.33 L88.36 82.47 L85.34 75.72 L83.48 72.13 L82.9 70.55 L82.61 70.26 L68.25 39.66 L67.67 38.79 L61.35 25.14 L61.06 24.86 L58.48 19.11 L58.19 18.82 L53.88 9.48 L52.01 5.89 L51.58 4.6Z"/></symbol>
   <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
   <symbol id="i-menos" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
   <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
@@ -22,52 +23,50 @@
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.500 19 12 8 18.500z" fill="currentColor" stroke="currentColor" stroke-width="1.500" stroke-linejoin="round"/></symbol>
   <symbol id="i-bolsa" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
 
-  <!-- Dibujos de producto (provisorios hasta tener las fotos reales) -->
+  <!-- Dibujos de producto (provisorios hasta tener las fotos reales).
+       Dos tintas, estilo serigrafía: forma blanca y una copia roja corrida atrás. -->
+  <defs>
+    <g id="f-pollo"><path d="M27 36 13 50" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none"/><circle cx="9" cy="48" r="5.500" fill="currentColor"/><circle cx="14" cy="54" r="5.500" fill="currentColor"/><ellipse cx="39" cy="23" rx="19" ry="16" transform="rotate(-40 39 23)" fill="currentColor"/></g>
+    <g id="f-balde"><ellipse cx="21" cy="15.500" rx="10" ry="8" transform="rotate(-25 21 15.500)" fill="currentColor"/><ellipse cx="41" cy="12.500" rx="10" ry="8" transform="rotate(20 41 12.500)" fill="currentColor"/><path d="M11 25h42l-5.500 33h-31z" fill="currentColor"/><rect x="8" y="20" width="48" height="8" rx="4" fill="currentColor"/></g>
+    <g id="f-taco"><path d="M4 34h56c0 15-12 24-28 24S4 49 4 34z" fill="currentColor"/></g>
+    <g id="f-papas"><g fill="currentColor"><rect x="15" y="9" width="8" height="32" rx="2.500" transform="rotate(-9 19 25)"/><rect x="24" y="5" width="8" height="34" rx="2.500" transform="rotate(-3 28 22)"/><rect x="33" y="7" width="8" height="33" rx="2.500" transform="rotate(5 37 23)"/><rect x="42" y="11" width="8" height="30" rx="2.500" transform="rotate(11 46 26)"/></g></g>
+    <g id="f-gaseosa"><path d="M35 21 39 8h10" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="19" width="36" height="7" rx="3.500" fill="currentColor"/><path d="M17 26h30l-4 32H21z" fill="currentColor"/></g>
+    <g id="f-salsa"><path d="M19 30h26l-3.500 26h-19z" fill="currentColor"/><path d="M20 30c0-12 7-18 12-18s12 6 12 18z" fill="currentColor"/></g>
+  </defs>
+
   <symbol id="i-pollo" viewBox="0 0 64 64">
-    <path d="M27 36 13 50" stroke="#fdfbf7" stroke-width="7" stroke-linecap="round"/>
-    <circle cx="9" cy="48" r="5.5" fill="#fdfbf7"/><circle cx="14" cy="54" r="5.5" fill="#fdfbf7"/>
-    <ellipse cx="41" cy="26" rx="19" ry="16" transform="rotate(-40 41 26)" fill="#e08a00"/>
-    <ellipse cx="39" cy="23" rx="19" ry="16" transform="rotate(-40 39 23)" fill="#ffb800"/>
-    <path d="M28 17c4-6 12-9 20-6" stroke="#ffd870" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <use href="#f-pollo" x="3" y="3" color="#d62828"/><use href="#f-pollo" color="#f5f5f5"/>
+    <path d="M28 17c4-6 12-9 20-6M24 26c2-3 4-5 7-6.500" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/>
   </symbol>
   <symbol id="i-balde" viewBox="0 0 64 64">
-    <ellipse cx="22" cy="17" rx="10" ry="8" transform="rotate(-25 22 17)" fill="#e08a00"/>
-    <ellipse cx="21" cy="15.5" rx="10" ry="8" transform="rotate(-25 21 15.5)" fill="#ffb800"/>
-    <ellipse cx="42" cy="14" rx="10" ry="8" transform="rotate(20 42 14)" fill="#e08a00"/>
-    <ellipse cx="41" cy="12.5" rx="10" ry="8" transform="rotate(20 41 12.5)" fill="#ffb800"/>
-    <path d="M11 25h42l-5.500 33h-31z" fill="#e61919"/>
-    <path d="M25 26l1.400 32M32 26v32M39 26l-1.400 32" stroke="#fdfbf7" stroke-width="4"/>
-    <rect x="8" y="20" width="48" height="8" rx="4" fill="#fdfbf7"/>
+    <use href="#f-balde" x="3" y="3" color="#d62828"/><use href="#f-balde" color="#f5f5f5"/>
+    <path d="M25 30l1.400 28M32 30v28M39 30l-1.400 28" stroke="#d62828" stroke-width="4" fill="none"/>
+    <path d="M16 15c2-3 5-4 8-4M37 11c3-1 6 0 8 2" stroke="#111" stroke-width="2.500" fill="none" stroke-linecap="round"/>
   </symbol>
   <symbol id="i-taco" viewBox="0 0 64 64">
-    <path d="M4 34h56c0 15-12 24-28 24S4 49 4 34z" fill="#ffb800"/>
-    <path d="M11 44c3 7 10 11 19 12" stroke="#ffd870" stroke-width="3.500" fill="none" stroke-linecap="round"/>
-    <path d="M2 37Q5 25 12 30Q15 19 22 28Q26 17 33 26Q39 17 44 27Q50 19 54 29Q59 25 62 37z" fill="#6dbb4a"/>
-    <rect x="17" y="27" width="7" height="7" rx="1.500" transform="rotate(-14 20 30)" fill="#e61919"/>
-    <rect x="30" y="24" width="7" height="7" rx="1.500" transform="rotate(10 33 27)" fill="#e61919"/>
-    <rect x="43" y="28" width="6" height="6" rx="1.500" transform="rotate(-8 46 31)" fill="#e61919"/>
-    <path d="M4 36h56" stroke="#e08a00" stroke-width="3"/>
+    <g transform="rotate(-12 32 38)">
+      <use href="#f-taco" x="3" y="3" color="#d62828"/><use href="#f-taco" color="#f5f5f5"/>
+      <path d="M11 44c3 7 10 11 19 12" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M2 37Q5 25 12 30Q15 19 22 28Q26 17 33 26Q39 17 44 27Q50 19 54 29Q59 25 62 37z" fill="#d62828"/>
+      <rect x="17" y="27" width="7" height="7" rx="1.500" transform="rotate(-14 20 30)" fill="#f5f5f5"/>
+      <rect x="30" y="24" width="7" height="7" rx="1.500" transform="rotate(10 33 27)" fill="#f5f5f5"/>
+      <rect x="43" y="28" width="6" height="6" rx="1.500" transform="rotate(-8 46 31)" fill="#f5f5f5"/>
+      <path d="M4 36h56" stroke="#111" stroke-width="2.500"/>
+    </g>
   </symbol>
   <symbol id="i-papas" viewBox="0 0 64 64">
-    <g fill="#ffb800">
-      <rect x="15" y="9" width="8" height="32" rx="2.500" transform="rotate(-9 19 25)"/>
-      <rect x="24" y="5" width="8" height="34" rx="2.500" transform="rotate(-3 28 22)"/>
-      <rect x="33" y="7" width="8" height="33" rx="2.500" transform="rotate(5 37 23)"/>
-      <rect x="42" y="11" width="8" height="30" rx="2.500" transform="rotate(11 46 26)"/>
-    </g>
-    <path d="M12 34h40l-4.500 24h-31z" fill="#e61919"/>
-    <path d="M26 52l6-10 6 10" stroke="#fdfbf7" stroke-width="3.500" fill="none"/>
+    <use href="#f-papas" x="3" y="3" color="#d62828"/><use href="#f-papas" color="#f5f5f5"/>
+    <path d="M12 34h40l-4.500 24h-31z" fill="#d62828"/>
+    <path d="M26 52l6-10 6 10" stroke="#f5f5f5" stroke-width="3.500" fill="none"/>
   </symbol>
   <symbol id="i-gaseosa" viewBox="0 0 64 64">
-    <path d="M35 21 39 8h10" stroke="#ffb800" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="14" y="19" width="36" height="7" rx="3.500" fill="#fdfbf7"/>
-    <path d="M17 26h30l-4 32H21z" fill="#e61919"/>
-    <path d="M18.600 38h26.800l-1 8H19.600z" fill="#fdfbf7"/>
+    <use href="#f-gaseosa" x="3" y="3" color="#d62828"/><use href="#f-gaseosa" color="#f5f5f5"/>
+    <path d="M18.600 38h26.800l-1 8H19.600z" fill="#d62828"/>
   </symbol>
   <symbol id="i-salsa" viewBox="0 0 64 64">
-    <path d="M19 30h26l-3.500 26h-19z" fill="#fdfbf7"/>
-    <path d="M20 30c0-12 7-18 12-18s12 6 12 18z" fill="#e61919"/>
-    <path d="M25 24c1-5 4-8 7-9" stroke="#ff7a70" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <use href="#f-salsa" x="3" y="3" color="#d62828"/><use href="#f-salsa" color="#f5f5f5"/>
+    <path d="M20 30c0-12 7-18 12-18s12 6 12 18z" fill="#d62828"/>
+    <path d="M25 24c1-5 4-8 7-9" stroke="#f5f5f5" stroke-width="3" fill="none" stroke-linecap="round"/>
   </symbol>
 </svg>
 
@@ -78,7 +77,7 @@
 <header class="barra" id="inicio">
   <div class="contenedor">
     <div class="barra-fila">
-      <a class="logo" href="#inicio" translate="no" aria-label="CRAVE, volver al inicio">CR<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>VE</a>
+      <a class="logo" href="#inicio" aria-label="CRAVE, volver al inicio"><img src="img/logo-crave.png" width="520" height="111" alt="CRAVE"></a>
       <button class="boton-pedido" id="abrir-pedido" type="button" aria-haspopup="dialog">
         <svg class="icono" aria-hidden="true"><use href="#i-bolsa"/></svg>
         <span>Mi pedido</span>
@@ -104,7 +103,7 @@
           <span class="sr">Feed the craving.</span>
           <span aria-hidden="true">
             <span class="linea-titulo"><span>Feed the</span></span>
-            <span class="linea-titulo"><span>CR<svg class="chev"><use href="#i-chevron"/></svg>VING</span></span>
+            <span class="linea-titulo"><span>CR<svg class="chev"><use href="#i-a"/></svg>VING</span></span>
           </span>
         </h1>
         <p class="lede">Pollo frito y tacos en Sunchales. Armá tu pedido, completá tus datos y pagá con transferencia o efectivo.</p>
@@ -113,22 +112,26 @@
           <a class="btn btn-borde" href="#combos">Ver combos</a>
         </div>
         <ul class="datos">
-          <li><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>Delivery o retiro en el local</li>
-          <li><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>Transferencia o efectivo</li>
-          <li><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>Demora estimada de 40 a 50 minutos</li>
+          <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Delivery o retiro en el local</li>
+          <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Transferencia o efectivo</li>
+          <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Elegís el horario de entrega</li>
         </ul>
       </div>
-      <div class="sello">
+      <div class="sello" role="img" aria-label="CRAVE, feed the craving">
         <svg class="anillo" viewBox="0 0 200 200" aria-hidden="true">
           <defs><path id="trazado-anillo" d="M100 100m-80 0a80 80 0 1 1 160 0a80 80 0 1 1-160 0"/></defs>
           <text><textPath href="#trazado-anillo" textLength="498" lengthAdjust="spacing">POLLO FRITO + TACOS + DELIVERY + SUNCHALES + </textPath></text>
         </svg>
-        <img src="img/sello.png" width="392" height="392" alt="Logo de CRAVE: Feed the craving" fetchpriority="high">
+        <!-- La "A" en dos tintas: una copia blanca corrida atrás y la roja encima -->
+        <svg class="sello-a" viewBox="0 0 110 112" aria-hidden="true">
+          <use href="#i-a" x="9" y="7" width="100" height="105.320" color="#f5f5f5"/>
+          <use href="#i-a" x="4" y="2" width="100" height="105.320" color="#d62828"/>
+        </svg>
       </div>
     </div>
   </section>
 
-  <!-- CINTA AMARILLA -->
+  <!-- CINTA BLANCA -->
   <div class="cinta" aria-hidden="true"><div class="cinta-pista" id="cinta"></div></div>
 
   <div class="contenedor">
@@ -156,7 +159,7 @@
       <h2 class="titulo" id="titulo-pasos">Pedir es fácil</h2>
       <ol class="pasos">
         <li class="paso reveal"><div class="paso-numero" aria-hidden="true">1</div><h3>Elegí tu combo</h3><p>Sumá productos desde la carta. El total se actualiza al instante.</p></li>
-        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">2</div><h3>Completá tus datos</h3><p>Nombre, teléfono y dirección si pedís delivery.</p></li>
+        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">2</div><h3>Elegí horario y datos</h3><p>Nombre, teléfono, dirección si pedís delivery y el horario que más te queda.</p></li>
         <li class="paso reveal"><div class="paso-numero" aria-hidden="true">3</div><h3>Pagá y recibí</h3><p>Transferí a nuestro alias o pagá en efectivo cuando lo recibís.</p></li>
       </ol>
     </section>
@@ -171,7 +174,7 @@
         <p>Armá tu pedido y lo preparamos al momento.</p>
       </div>
       <div class="banda-botones">
-        <button class="btn btn-amarillo" type="button" id="banda-pedido">Ver mi pedido</button>
+        <button class="btn btn-blanco" type="button" id="banda-pedido">Ver mi pedido</button>
         <a class="btn btn-borde" href="https://www.instagram.com/crave.sunchales/" rel="noopener">Instagram @crave.sunchales</a>
       </div>
     </div>
@@ -181,8 +184,7 @@
 <footer class="pie">
   <div class="contenedor pie-fila">
     <div class="pie-marca">
-      <img src="img/sello.png" width="64" height="64" alt="" loading="lazy">
-      <p translate="no">CRAVE<br>Feed the craving</p>
+      <img src="img/logo-lema.png" width="640" height="189" alt="CRAVE, feed the craving" loading="lazy">
     </div>
     <div class="pie-datos">
       <p>Sunchales, Santa Fe</p>
@@ -266,17 +268,12 @@
             </div>
           </fieldset>
 
-          <fieldset>
-            <legend>Cuándo lo querés</legend>
-            <div class="opciones">
-              <label class="opcion"><input type="radio" name="cuando" value="ya" checked><span><b>Lo antes posible</b><small>Demora de 40 a 50 min</small></span></label>
-              <label class="opcion"><input type="radio" name="cuando" value="prog"><span><b>Programarlo</b><small>Elegís el horario</small></span></label>
-            </div>
-            <div class="campo" id="grupo-hora" hidden>
-              <label for="f-hora">Horario</label>
-              <input id="f-hora" name="hora" type="time" aria-describedby="e-hora">
-              <p class="error" id="e-hora" hidden></p>
-            </div>
+          <fieldset id="grupo-horario">
+            <legend id="legend-horario">Horario de entrega</legend>
+            <p class="ayuda" id="a-hora">Cada horario tiene lugares limitados para que tu pedido salga caliente y a tiempo.</p>
+            <div class="franjas" id="f-hora" role="group" aria-labelledby="legend-horario" aria-describedby="a-hora e-hora" tabindex="-1"></div>
+            <p class="aviso-franjas" id="aviso-franjas" hidden></p>
+            <p class="error" id="e-hora" hidden></p>
           </fieldset>
 
           <fieldset>
