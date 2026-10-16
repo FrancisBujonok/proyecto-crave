@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -16,7 +15,6 @@ public record LoginAdmin(string? Password);
 
 public static class AdminEndpoints
 {
-    const string PoliticaLogin = "login-admin";   // nombre de la regla "máximo de intentos de login"
     const int LargoMinimoContrasena = 10;         // una contraseña más corta se considera "no configurada"
 
     // ---------- 1) SERVICIOS: se llama una vez al armar la app (builder.Services.AgregarAdmin()) ----------
@@ -47,27 +45,7 @@ public static class AdminEndpoints
             });
         servicios.AddAuthorization();
 
-        // Límite de intentos: máximo 5 pedidos de login cada 10 minutos desde la misma IP.
-        servicios.AddRateLimiter(opciones =>
-        {
-            opciones.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            opciones.AddPolicy(PoliticaLogin, contexto => RateLimitPartition.GetFixedWindowLimiter(
-                contexto.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",   // cada IP tiene su propio contador
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(10),
-                    QueueLimit = 0   // los que se pasan no esperan en fila: se rechazan
-                }));
-
-            opciones.OnRejected = async (contexto, cancelacion) =>
-            {
-                if (contexto.Lease.TryGetMetadata(MetadataName.RetryAfter, out var espera))
-                    contexto.HttpContext.Response.Headers.RetryAfter = ((int)espera.TotalSeconds).ToString();
-                contexto.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                await contexto.HttpContext.Response.WriteAsJsonAsync(new { error = "Demasiados intentos. Esperá unos minutos y probá de nuevo." }, cancelacion);
-            };
-        });
+        // El límite de intentos de login (5 cada 10 minutos por IP) está en Limites.cs
 
         return servicios;
     }
@@ -86,7 +64,6 @@ public static class AdminEndpoints
 
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseRateLimiter();
         return app;
     }
 
@@ -97,7 +74,7 @@ public static class AdminEndpoints
         // Las únicas excepciones son las que dicen AllowAnonymous (entrar y salir).
         var admin = app.MapGroup("/api/admin").RequireAuthorization();
 
-        admin.MapPost("/login", Login).AllowAnonymous().RequireRateLimiting(PoliticaLogin);
+        admin.MapPost("/login", Login).AllowAnonymous().RequireRateLimiting(Limites.PoliticaLogin);
 
         admin.MapPost("/logout", async (HttpContext http) =>
         {

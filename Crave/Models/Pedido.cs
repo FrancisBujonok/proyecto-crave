@@ -27,6 +27,11 @@ public class PedidoNuevo
     public int AbonaCon { get; set; }                        // con cuánto paga en efectivo (0 = exacto)
     public string Notas { get; set; } = "";
     public List<ItemPedido> Items { get; set; } = new();
+
+    // Antispam (ver PedidoReglas): "website" es un campo oculto que una persona nunca llena,
+    // y "segundos" es el tiempo que la página estuvo abierta antes de confirmar.
+    public string? Website { get; set; }
+    public int? Segundos { get; set; }
 }
 
 // ---------- Lo que RESPONDE el servidor (C# -> JSON) ----------

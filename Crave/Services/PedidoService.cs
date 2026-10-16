@@ -100,7 +100,10 @@ public class PedidoService
     // Devuelve la lista de problemas. Si la lista está vacía, el pedido es válido.
     public async Task<List<string>> Validar(PedidoNuevo pedido)
     {
-        var errores = new List<string>();
+        // Primero la forma (datos que faltan, textos enormes, caracteres raros): si algo está mal ni consultamos la base.
+        var errores = PedidoReglas.RevisarForma(pedido);
+        if (errores.Count > 0) return errores;
+
         var productos = await BuscarProductos(pedido);
         var gaseosas = await BuscarGaseosas();
         var zona = await BuscarZona(pedido);
@@ -165,6 +168,20 @@ public class PedidoService
             errores.Add("Elegí en qué horario lo querés.");
         else if (await _horarios.LugaresLibres(pedido.Hora) <= 0)
             errores.Add("Ese horario ya no está disponible. Elegí otro.");
+
+        // Antispam: un mismo teléfono no puede tener más de 3 pedidos en curso a la vez.
+        // Se compara por los últimos 8 números, así que "3493 41-2345" y "+54 9 3493 412345" cuentan como el mismo.
+        if (pedido.Telefono.Count(char.IsDigit) >= 8)
+        {
+            var hoy = DateOnly.FromDateTime(HorarioService.Ahora());
+            var telefonosEnCurso = await _db.Pedidos
+                .Where(p => p.Dia == hoy && p.Estado != "cancelado" && p.Estado != "entregado")
+                .Select(p => p.Telefono)
+                .ToListAsync();
+            string clave = PedidoReglas.ClaveTelefono(pedido.Telefono);
+            if (telefonosEnCurso.Count(t => PedidoReglas.ClaveTelefono(t) == clave) >= PedidoReglas.MaxPedidosActivosPorTelefono)
+                errores.Add("Ya tenés " + PedidoReglas.MaxPedidosActivosPorTelefono + " pedidos en curso con ese teléfono. Esperá a recibirlos o escribinos por WhatsApp.");
+        }
 
         int total = CalcularSubtotal(pedido, productos) + (zona?.Costo ?? 0);
         if (pedido.Pago == "efectivo" && pedido.AbonaCon > 0 && pedido.AbonaCon < total)

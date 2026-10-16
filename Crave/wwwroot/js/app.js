@@ -9,6 +9,7 @@
 // true  = usa la carta de menu-demo.js y simula el envío (sirve para ver la página sin servidor).
 // false = pide la carta a /api/menu y manda el pedido a /api/pedidos (servidor C#).
 const MODO_DEMO = false;
+const paginaAbiertaEn = Date.now();   // para el antispam: el servidor mira cuánto tiempo estuvo abierta la página
 
 const CONFIG = {
   whatsapp: "5490000000000",          // ejemplo: reemplazar por el número real. Formato: 54 + 9 + código de área sin 0 + número sin 15 (ej.: 5493493123456)
@@ -628,7 +629,9 @@ function leerPedidoDelFormulario() {
     pago: f.pago.value,
     abonaCon: parseInt(f.efectivo.value.replace(/\D/g, ""), 10) || 0,
     notas: f.notas.value.trim(),
-    items: items
+    items: items,
+    website: f.website.value,   // campo oculto: tiene que ir vacío
+    segundos: Math.round((Date.now() - paginaAbiertaEn) / 1000)
   };
 }
 
@@ -645,8 +648,8 @@ async function enviarPedido(datos) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(datos)
     });
-    const json = await respuesta.json();
-    // 400 = datos inválidos, 409 = el horario se llenó justo antes. En ambos casos el servidor manda "errores".
+    const json = await respuesta.json().catch(() => ({}));   // algunos rechazos (ej.: 413) no traen texto
+    // 400 = datos inválidos, 409 = el horario se llenó justo antes, 429 = demasiados envíos seguidos. El servidor manda "errores".
     if (!respuesta.ok) return { ok: false, errores: json.errores || ["No pudimos registrar el pedido. Probá de nuevo."], conflicto: respuesta.status === 409 };
     return { ok: true, pedido: json };
   } catch (e) {

@@ -1,0 +1,60 @@
+using System.Threading.RateLimiting;
+
+namespace Crave.Endpoints;
+
+// Límites de velocidad: cuántos pedidos HTTP acepta el servidor de una misma persona (identificada por su IP).
+// Si se pasa, el servidor responde 429 "Too Many Requests" sin siquiera ejecutar el endpoint.
+// Sirve contra quien prueba contraseñas, quien manda pedidos falsos sin parar o quien satura la base de datos.
+public static class Limites
+{
+    public const string PoliticaLogin = "login-admin";   // 5 intentos de login cada 10 minutos
+    public const string PoliticaPedidos = "pedidos";     // 10 envíos de pedido cada 10 minutos
+    public const string PoliticaLectura = "lectura";     // 60 lecturas de la carta o los horarios por minuto
+
+    // Una regla "máximo N cada tanto por IP"
+    static RateLimitPartition<string> PorIp(HttpContext contexto, int maximo, TimeSpan ventana)
+    {
+        string ip = contexto.Connection.RemoteIpAddress?.ToString() ?? "sin-ip";   // cada IP tiene su propio contador
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = maximo,
+            Window = ventana,
+            QueueLimit = 0   // los que se pasan no esperan en fila: se rechazan
+        });
+    }
+
+    // Se llama una vez al armar la app (builder.Services.AgregarLimites())
+    public static IServiceCollection AgregarLimites(this IServiceCollection servicios)
+    {
+        servicios.AddRateLimiter(opciones =>
+        {
+            opciones.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            opciones.AddPolicy(PoliticaLogin, contexto => PorIp(contexto, 5, TimeSpan.FromMinutes(10)));
+            opciones.AddPolicy(PoliticaPedidos, contexto => PorIp(contexto, 10, TimeSpan.FromMinutes(10)));
+            opciones.AddPolicy(PoliticaLectura, contexto => PorIp(contexto, 60, TimeSpan.FromMinutes(1)));
+
+            // Qué se responde cuando alguien se pasa. "error" lo lee el login del panel y "errores" lo lee la tienda.
+            opciones.OnRejected = async (contexto, cancelacion) =>
+            {
+                var http = contexto.HttpContext;
+                if (contexto.Lease.TryGetMetadata(MetadataName.RetryAfter, out var espera))
+                    http.Response.Headers.RetryAfter = ((int)espera.TotalSeconds).ToString();
+                http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+                string mensaje = http.Request.Path.StartsWithSegments("/api/pedidos")
+                    ? "Enviaste demasiados pedidos seguidos. Esperá unos minutos y probá de nuevo."
+                    : "Demasiados intentos. Esperá unos minutos y probá de nuevo.";
+                await http.Response.WriteAsJsonAsync(new { error = mensaje, errores = new[] { mensaje } }, cancelacion);
+            };
+        });
+        return servicios;
+    }
+
+    // Se llama una vez después de construir la app (app.UsarLimites())
+    public static WebApplication UsarLimites(this WebApplication app)
+    {
+        app.UseRateLimiter();
+        return app;
+    }
+}

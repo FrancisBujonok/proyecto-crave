@@ -242,12 +242,12 @@
             <legend>Tus datos</legend>
             <div class="campo">
               <label for="f-nombre">Nombre y apellido</label>
-              <input id="f-nombre" name="nombre" type="text" autocomplete="name" placeholder="Ej.: Lucía Gómez…" aria-describedby="e-nombre">
+              <input id="f-nombre" name="nombre" type="text" maxlength="60" autocomplete="name" placeholder="Ej.: Lucía Gómez…" aria-describedby="e-nombre">
               <p class="error" id="e-nombre" hidden></p>
             </div>
             <div class="campo">
               <label for="f-telefono">Teléfono</label>
-              <input id="f-telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej.: 3493 15 000000…" aria-describedby="e-telefono a-telefono">
+              <input id="f-telefono" name="telefono" type="tel" inputmode="tel" maxlength="25" autocomplete="tel" placeholder="Ej.: 3493 15 000000…" aria-describedby="e-telefono a-telefono">
               <p class="ayuda" id="a-telefono">Lo usamos solo para avisarte por tu pedido.</p>
               <p class="error" id="e-telefono" hidden></p>
             </div>
@@ -258,12 +258,12 @@
             <div class="fila-doble">
               <div class="campo">
                 <label for="f-calle">Calle y número</label>
-                <input id="f-calle" name="calle" type="text" autocomplete="address-line1" placeholder="Ej.: Bv. Ejemplo 1234…" aria-describedby="e-calle">
+                <input id="f-calle" name="calle" type="text" maxlength="80" autocomplete="address-line1" placeholder="Ej.: Bv. Ejemplo 1234…" aria-describedby="e-calle">
                 <p class="error" id="e-calle" hidden></p>
               </div>
               <div class="campo">
                 <label for="f-piso">Piso o depto <span class="opcional">(opcional)</span></label>
-                <input id="f-piso" name="piso" type="text" autocomplete="address-line2" placeholder="Ej.: 2°B…">
+                <input id="f-piso" name="piso" type="text" maxlength="30" autocomplete="address-line2" placeholder="Ej.: 2°B…">
               </div>
             </div>
             <div class="campo">
@@ -273,7 +273,7 @@
             </div>
             <div class="campo">
               <label for="f-ref">Referencias <span class="opcional">(opcional)</span></label>
-              <textarea id="f-ref" name="referencias" autocomplete="off" placeholder="Ej.: portón negro, el timbre no funciona…"></textarea>
+              <textarea id="f-ref" name="referencias" maxlength="200" autocomplete="off" placeholder="Ej.: portón negro, el timbre no funciona…"></textarea>
             </div>
           </fieldset>
 
@@ -310,7 +310,12 @@
 
           <div class="campo">
             <label for="f-notas">Aclaraciones del pedido <span class="opcional">(opcional)</span></label>
-            <textarea id="f-notas" name="notas" autocomplete="off" placeholder="Ej.: sin picante, salsas aparte…"></textarea>
+            <textarea id="f-notas" name="notas" maxlength="300" autocomplete="off" placeholder="Ej.: sin picante, salsas aparte…"></textarea>
+          </div>
+
+          <!-- Trampa para programas que llenan formularios solos: las personas no la ven ni la tocan, un programa sí la llena -->
+          <div class="trampa" aria-hidden="true">
+            <label>No completar este campo <input name="website" type="text" tabindex="-1" autocomplete="off"></label>
           </div>
         </form>
       </div>

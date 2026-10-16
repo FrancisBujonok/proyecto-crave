@@ -30,6 +30,8 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `Data/CraveDb.cs` | Conecta C# con las tablas de Supabase (categorias, productos, zonas, pedidos, pedido_items). |
 | `Services/PedidoService.cs` | Valida el pedido y calcula subtotal, envío, total y vuelto. |
 | `Services/HorarioService.cs` | Horarios de entrega con cupo. Junta los datos de la base; la cuenta está en `GeneradorFranjas.cs`. |
+| `Services/PedidoReglas.cs` | Largos máximos, caracteres permitidos y detección de spam del pedido. |
+| `Endpoints/Limites.cs` | Límites de velocidad por IP (login, pedidos, lectura). |
 | `Services/ConfigService.cs` | Lee y guarda la configuración del local (tabla `configuracion`). |
 | `Models/*.cs` | Las clases: `Producto`, `Categoria`, `Zona`, `Franja`, `PedidoNuevo`, `PedidoCreado` y `Pedido`/`PedidoItem` (las filas guardadas). |
 | `wwwroot/index.html` | La estructura de la página. |
@@ -66,6 +68,22 @@ La cuenta de los horarios está en `Services/GeneradorFranjas.cs` y las reglas d
 
 Si dos clientes eligen el último lugar a la vez, el segundo recibe un 409 con el mensaje "Ese horario se acaba de completar" y la página le muestra los horarios actualizados.
 En el modo demo (`MODO_DEMO = true`) los horarios se simulan con `DEMO_HORARIOS` en `app.js`.
+
+## Protección contra spam y abusos
+
+Cualquiera puede mandar un pedido a `POST /api/pedidos` sin usar la página, así que el servidor no confía en nada de lo que llega. Hay varias capas:
+
+| Defensa | Qué hace | Dónde está |
+|---|---|---|
+| Límite por IP | 10 envíos de pedido cada 10 minutos, 5 intentos de login cada 10 minutos y 60 lecturas de carta u horarios por minuto. Si se pasa: 429. | `Endpoints/Limites.cs` |
+| Tamaño máximo | Ningún envío puede pesar más de 64 KB (si no: 413). | `Program.cs` |
+| Largos y caracteres | Nombre 60, teléfono 25, calle 80, piso 30, referencias 200, aclaraciones 300. Sin caracteres invisibles. Teléfono solo con números, espacios, + y guiones. Datos que faltan (null) no rompen el servidor. | `Services/PedidoReglas.cs` |
+| Campo trampa | Un campo oculto (`website`) que una persona nunca llena. Si viene lleno, se descarta el pedido. | `index.html` y `PedidoReglas.EsSospechoso` |
+| Tiempo en la página | Si el pedido llega a menos de 8 segundos de abrir la página, se descarta. | `app.js` (`segundos`) y `PedidoReglas` |
+| Tope por teléfono | Un mismo teléfono no puede tener más de 3 pedidos en curso (nuevo, preparando o listo) el mismo día. | `PedidoService.Validar` |
+
+Los números están al principio de `PedidoReglas.cs` y `Limites.cs`. Si un cliente real se queda bloqueado, el motivo queda en el log del servidor (Render, pestaña Logs) con la palabra "antispam".
+Un spammer decidido puede saltarse algunas de estas defensas. Si alguien llena los horarios con pedidos falsos, desde el panel los cancelás y el lugar se libera.
 
 ## Cambiar la carta
 
