@@ -32,6 +32,7 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `Services/HorarioService.cs` | Horarios de entrega con cupo. Junta los datos de la base; la cuenta está en `GeneradorFranjas.cs`. |
 | `Services/PedidoReglas.cs` | Largos máximos, caracteres permitidos y detección de spam del pedido. |
 | `Endpoints/Limites.cs` | Límites de velocidad por IP (login, pedidos, lectura). |
+| `Services/LatidoBaseDeDatos.cs` | Consulta la base cada 6 horas para que Supabase no pause el proyecto. `ChequeoBase.cs` hace la consulta. |
 | `Services/ConfigService.cs` | Lee y guarda la configuración del local (tabla `configuracion`). |
 | `Models/*.cs` | Las clases: `Producto`, `Categoria`, `Zona`, `Franja`, `PedidoNuevo`, `PedidoCreado` y `Pedido`/`PedidoItem` (las filas guardadas). |
 | `wwwroot/index.html` | La estructura de la página. |
@@ -84,6 +85,29 @@ Cualquiera puede mandar un pedido a `POST /api/pedidos` sin usar la página, as�
 
 Los números están al principio de `PedidoReglas.cs` y `Limites.cs`. Si un cliente real se queda bloqueado, el motivo queda en el log del servidor (Render, pestaña Logs) con la palabra "antispam".
 Un spammer decidido puede saltarse algunas de estas defensas. Si alguien llena los horarios con pedidos falsos, desde el panel los cancelás y el lugar se libera.
+
+## Que el sitio no se duerma (Render) ni se pause (Supabase)
+
+Hay dos "dormidas" distintas en los planes gratuitos:
+
+| Servicio | Qué pasa | Cómo se evita |
+|---|---|---|
+| Render (gratis) | Si pasan 15 minutos sin visitas, el servidor se apaga. La próxima visita lo despierta, pero tarda cerca de 1 minuto. | Un monitor externo que visite `/api/salud` cada 5 minutos, o el plan Starter (USD 7 por mes), que no se duerme. |
+| Supabase (gratis) | Si pasa una semana con poca actividad, pausa el proyecto (los datos no se borran; se reactiva desde el panel de Supabase). Avisa por mail una semana antes. | `/api/salud` y el latido interno consultan la base. Con Render pago alcanza el latido solo. |
+
+Qué hay en el código:
+
+- `GET /api/salud`: responde 200 si el servidor y la base funcionan, o 503 si la base falla. Acepta GET y HEAD. No devuelve datos.
+- `Services/LatidoBaseDeDatos.cs`: cada 6 horas consulta la base (también al arrancar). Se cambia con la variable `Latido__CadaSegundos`. En el plan gratuito de Render no corre mientras el servidor duerme, por eso hace falta además el monitor externo.
+- Si la base falla, el latido lo anota en el log ("Latido a la base de datos: falló") y reintenta; no tira abajo el servidor.
+
+Monitor gratuito con UptimeRobot (50 monitores, chequeo cada 5 minutos):
+
+1. Crear cuenta en uptimerobot.com y entrar a Dashboard -> Add New Monitor.
+2. Tipo "HTTP(s)", nombre "CRAVE", URL `https://cravesunchales.onrender.com/api/salud`, intervalo 5 minutos.
+3. En alertas, poner tu mail: avisa si el sitio o la base dejan de responder.
+
+El plan gratuito de Render da 750 horas por mes entre todos los servicios gratuitos de la cuenta. Un servicio despierto todo el mes usa unas 744, así que entra solo si es el único servicio gratuito de la cuenta.
 
 ## Cambiar la carta
 

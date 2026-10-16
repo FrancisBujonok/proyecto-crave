@@ -22,6 +22,8 @@ builder.Services.AddDbContext<CraveDb>(opciones => opciones.UseNpgsql(cadena));
 builder.Services.AddScoped<IConfigService, ConfigService>();   // configuración del local (horarios, cupo, abierto/cerrado)
 builder.Services.AddScoped<HorarioService>();   // se crea uno nuevo por cada pedido que llega
 builder.Services.AddScoped<PedidoService>();
+builder.Services.AddScoped<IChequeoBase, ChequeoBase>();   // consulta chica a la base (la usan /api/salud y el latido)
+builder.Services.AddHostedService<LatidoBaseDeDatos>();     // cada 6 horas toca la base para que Supabase no la pause
 builder.Services.AddScoped<IAdminService, AdminService>();   // lo que usa el panel de administración
 
 // Las claves de la cookie de sesión se guardan en la tabla claves_sesion (ver sql/03-claves-sesion.sql).
@@ -49,6 +51,23 @@ app.MapGet("/api/menu", async (CraveDb db) =>
     var zonas = await db.Zonas.OrderBy(z => z.Id).ToListAsync();
 
     return new { categorias, zonas };
+}).RequireRateLimiting(Limites.PoliticaLectura);
+
+// Para monitores externos (UptimeRobot, etc.): responde 200 si el servidor y la base funcionan, 503 si la base falla.
+// Acepta GET y HEAD porque algunos monitores usan HEAD. No devuelve datos: solo si está todo bien.
+// Cada visita también mantiene despierto el servidor de Render (plan gratuito) y activo el proyecto de Supabase.
+app.MapMethods("/api/salud", new[] { "GET", "HEAD" }, async (IChequeoBase chequeo, ILoggerFactory logs, CancellationToken cancelacion) =>
+{
+    try
+    {
+        await chequeo.Chequear(cancelacion);
+        return Results.Ok(new { ok = true });
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+        logs.CreateLogger("Salud").LogError(ex, "/api/salud: la base de datos no responde");
+        return Results.Json(new { ok = false }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
 }).RequireRateLimiting(Limites.PoliticaLectura);
 
 // Los horarios disponibles de hoy, con cuántos lugares quedan en cada uno.
