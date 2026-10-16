@@ -32,6 +32,7 @@
     <g id="f-papas"><g fill="currentColor"><rect x="15" y="9" width="8" height="32" rx="2.500" transform="rotate(-9 19 25)"/><rect x="24" y="5" width="8" height="34" rx="2.500" transform="rotate(-3 28 22)"/><rect x="33" y="7" width="8" height="33" rx="2.500" transform="rotate(5 37 23)"/><rect x="42" y="11" width="8" height="30" rx="2.500" transform="rotate(11 46 26)"/></g></g>
     <g id="f-gaseosa"><path d="M35 21 39 8h10" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="19" width="36" height="7" rx="3.500" fill="currentColor"/><path d="M17 26h30l-4 32H21z" fill="currentColor"/></g>
     <g id="f-salsa"><path d="M19 30h26l-3.500 26h-19z" fill="currentColor"/><path d="M20 30c0-12 7-18 12-18s12 6 12 18z" fill="currentColor"/></g>
+    <g id="f-hamburguesa"><path d="M8 26c0-10 10-17 24-17s24 7 24 17z" fill="currentColor"/><rect x="6" y="38" width="52" height="7" rx="3.500" fill="currentColor"/><path d="M8 49h48c0 6-5 9-10 9H18c-5 0-10-3-10-9z" fill="currentColor"/></g>
   </defs>
 
   <symbol id="i-pollo" viewBox="0 0 64 64">
@@ -67,6 +68,11 @@
     <use href="#f-salsa" x="3" y="3" color="#d62828"/><use href="#f-salsa" color="#f5f5f5"/>
     <path d="M20 30c0-12 7-18 12-18s12 6 12 18z" fill="#d62828"/>
     <path d="M25 24c1-5 4-8 7-9" stroke="#f5f5f5" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-hamburguesa" viewBox="0 0 64 64">
+    <use href="#f-hamburguesa" x="3" y="3" color="#d62828"/><use href="#f-hamburguesa" color="#f5f5f5"/>
+    <rect x="6" y="29" width="52" height="7" rx="3.500" fill="#d62828"/>
+    <path d="M20 17h.1M32 14h.1M44 17h.1" stroke="#111" stroke-width="3.500" stroke-linecap="round"/>
   </symbol>
 </svg>
 
@@ -317,6 +323,12 @@
     <button class="btn btn-rojo" type="submit" form="formulario" id="boton-confirmar">Confirmar pedido</button>
   </div>
 </aside>
+
+<!-- VENTANA PARA ELEGIR LAS GASEOSAS DE UN COMBO (se llena desde app.js) -->
+<dialog class="selector" id="selector" aria-labelledby="selector-titulo">
+  <div class="selector-caja" id="selector-caja"></div>
+  <div class="sr" id="selector-aviso" aria-live="polite"></div>
+</dialog>
 
 <script src="js/menu-demo.js"></script>
 <script src="js/app.js"></script>

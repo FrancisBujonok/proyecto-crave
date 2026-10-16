@@ -5,6 +5,7 @@ Proyecto ASP.NET Core (Minimal API) que sirve la página y calcula los pedidos e
 ## Antes de ejecutarlo (una sola vez)
 
 1. Crear las tablas en Supabase: SQL Editor -> pegar `crave-base-de-datos.sql` -> Run.
+   Después, en el mismo lugar, pegar `sql/02-menu-real.sql` -> Run. Carga la carta real y se puede volver a correr sin perder pedidos.
 2. Instalar el paquete de base de datos (desde la carpeta con `Crave.csproj`; trae Entity Framework Core incluido):
    `dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL`
    Si da un error de versión (NU1202), agregá `--version 9.*` u `8.*`, según lo que muestre `dotnet --version`.
@@ -34,6 +35,8 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `wwwroot/css/estilos.css` | Colores, tipografías y animaciones. |
 | `wwwroot/js/app.js` | Carrito, formulario y animaciones. Habla con la API. |
 | `wwwroot/js/menu-demo.js` | Carta de ejemplo, solo para ver la página sin servidor (`MODO_DEMO = true` en `app.js`). |
+| `sql/02-menu-real.sql` | Carga la carta real (categorías, productos, fotos) y las columnas de gaseosas a elección. No toca los pedidos. |
+| `wwwroot/img/productos/` | Fotos de los productos. |
 
 ## Cómo se conecta todo
 
@@ -41,7 +44,7 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 2. La persona arma el pedido. El navegador solo calcula el total para mostrarlo.
 3. Al confirmar, la página manda a `/api/pedidos` los productos y cantidades (sin precios) y los datos de entrega y el horario elegido.
 4. `PedidoService.Validar` revisa todo. Si hay problemas, responde 400 con la lista y la página los muestra.
-5. Si está bien, `PedidoService.Crear` vuelve a revisar el cupo del horario (por si otro cliente se llevó el último lugar), calcula los importes con los precios de `MenuData`, guarda el pedido en la base (dentro de una transacción con candado por horario) y lo devuelve.
+5. Si está bien, `PedidoService.Crear` vuelve a revisar el cupo del horario (por si otro cliente se llevó el último lugar), calcula los importes con los precios de la tabla `productos`, guarda el pedido en la base (dentro de una transacción con candado por horario) y lo devuelve.
 
 ## Horarios con cupo
 
@@ -61,10 +64,19 @@ En el modo demo (`MODO_DEMO = true`) los horarios se simulan con `DEMO_HORARIOS`
 ## Cambiar la carta
 
 Se hace desde Supabase, sin tocar código: Table Editor -> `productos`. Para marcar algo como agotado, poné `agotado` en true. Para cambiar un precio, editá `precio`. Los cambios se ven al recargar la página.
+Los precios de `sql/02-menu-real.sql` son provisorios.
+
+## Gaseosas a elección
+
+Algunos productos (Familiar para 4, 5 y 6 y el menú niños) llevan gaseosas a elección. Se define con la columna `gaseosas_a_elegir` de `productos` (0 = ninguna).
+Las opciones son los productos de la categoría `bebidas`: si marcás una como agotada, deja de ofrecerse en todos los combos.
+El cliente las elige en una ventana al tocar "+", y quedan guardadas en `pedido_items.detalle` (ejemplo: "2 × Coca-Cola, 1 × Sprite").
 
 ## Pendiente
 
 - Panel del local para ver pedidos y cambiar su estado.
-- Fotos reales de producto: copiarlas en `wwwroot/img` y completar `Imagen = "img/archivo.png"` en `MenuData.cs`.
+- Precios reales (hoy son provisorios).
+- Fotos que faltan: alitas, Familiar para 6 y tacos. Copiarlas en `wwwroot/img/productos/` y completar la columna `imagen` de `productos` (ejemplo: `img/productos/alitas.jpg`).
+- Borrar `Data/MenuData.cs`: ya no se usa porque la carta vive en la base.
 - Ajustar con el local el cupo por horario y el horario de atención.
 - Número de WhatsApp, alias y titular reales: se cambian en `CONFIG` dentro de `wwwroot/js/app.js`.

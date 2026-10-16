@@ -23,7 +23,13 @@ const DEMO_HORARIOS = { apertura: "20:00", ultima: "23:30", cadaMinutos: 15, cup
 // ---------- 2. ESTADO (los datos que cambian) ----------
 let menu = { categorias: [], zonas: [] };
 let productos = {};      // id -> producto, para encontrarlo rápido
-let carrito = {};        // id -> cantidad. Ejemplo: { p4: 2, ga: 1 }
+const MAXIMO_POR_PRODUCTO = 30;   // el servidor también lo exige (PedidoService.Validar)
+let carrito = {};        // productos comunes: id -> cantidad. Ejemplo: { "ind-pollo4": 2, "beb-coca": 1 }
+// Productos con gaseosas a elegir (ej.: Familiar para 4): un renglón por cada unidad, porque cada una
+// puede llevar gaseosas distintas. Ejemplo: [{ uid: 1, id: "fam-4", gaseosas: ["beb-coca", "beb-coca", "beb-fanta", "beb-sprite"] }]
+let combos = [];
+let siguienteUid = 1;    // numerador para identificar cada renglón de "combos"
+let selector = null;     // lo que se está eligiendo en la ventana de gaseosas: { id, uid, origen, cantidades }
 let franjas = [];        // horarios de hoy: [{ hora: "21:15", libres: 3 }, ...]
 let franjasError = "";  // texto para mostrar si no hay horarios o no se pudieron cargar
 let quienAbrio = null;   // botón que abrió el cajón, para devolverle el foco al cerrar
@@ -49,6 +55,29 @@ function iconoChico(nombre) {
 
 // Avisa a lectores de pantalla (no se ve en pantalla)
 function anunciar(texto) { $("#aviso").textContent = texto; }
+
+// ¿Este producto lleva gaseosas a elegir? (lo define la columna gaseosas_a_elegir de la base)
+function tieneOpciones(p) { return (p.gaseosasAElegir || 0) > 0; }
+
+// Las gaseosas que se pueden elegir hoy: los productos de la categoría "bebidas" que no están agotados
+function gaseosasDisponibles() {
+  const bebidas = menu.categorias.find(c => c.id === "bebidas");
+  return bebidas ? bebidas.productos.filter(p => !p.agotado) : [];
+}
+
+// [coca, coca, sprite] -> "2 × Coca-Cola, 1 × Sprite". Con una sola gaseosa: solo el nombre.
+function textoGaseosas(ids) {
+  if (ids.length === 1) return productos[ids[0]].nombre;
+  const cuenta = {};
+  ids.forEach(id => { cuenta[id] = (cuenta[id] || 0) + 1; });
+  return Object.keys(cuenta).map(id => cuenta[id] + " × " + productos[id].nombre).join(", ");
+}
+
+// Cuántas unidades de un producto hay en el pedido (sea común o con gaseosas)
+function cantidadDe(id) {
+  if (tieneOpciones(productos[id])) return combos.filter(c => c.id === id).length;
+  return carrito[id] || 0;
+}
 
 // ---------- 4. DIBUJAR LA PÁGINA ----------
 async function cargarMenu() {
@@ -120,7 +149,7 @@ function tarjetaHTML(p) {
 // El botón "+" o, si ya hay unidades en el pedido, el selector de cantidad
 function controlHTML(id) {
   const p = productos[id];
-  const cantidad = carrito[id] || 0;
+  const cantidad = cantidadDe(id);
   if (p.agotado) return '<span class="chip-agotado">Agotado</span>';
   if (cantidad === 0) {
     return '<button type="button" class="mas" data-accion="sumar" data-id="' + id + '" aria-label="Agregar ' + esc(p.nombre) + '">' + iconoChico("mas") + "</button>";
@@ -240,21 +269,34 @@ function llenarZonas() {
 
 // ---------- 5. CARRITO ----------
 function guardarCarrito() {
-  try { localStorage.setItem("crave_carrito", JSON.stringify(carrito)); } catch (e) { /* si no se puede guardar, no pasa nada */ }
+  try { localStorage.setItem("crave_carrito_v2", JSON.stringify({ simples: carrito, combos: combos })); } catch (e) { /* si no se puede guardar, no pasa nada */ }
 }
 
 function leerCarrito() {
   try {
-    const guardado = JSON.parse(localStorage.getItem("crave_carrito") || "{}");
-    for (const id in guardado) {
-      // Solo recuperamos productos que todavía existen y no están agotados
-      if (productos[id] && !productos[id].agotado && guardado[id] > 0) carrito[id] = guardado[id];
+    const guardado = JSON.parse(localStorage.getItem("crave_carrito_v2") || "{}");
+
+    // Productos comunes: solo recuperamos los que todavía existen y no están agotados
+    const simples = guardado.simples || {};
+    for (const id in simples) {
+      const p = productos[id];
+      if (p && !p.agotado && !tieneOpciones(p) && simples[id] > 0) carrito[id] = Math.min(simples[id], MAXIMO_POR_PRODUCTO);
     }
+
+    // Combos con gaseosas: recuperamos los que siguen siendo válidos (producto vigente y gaseosas disponibles)
+    const disponibles = gaseosasDisponibles().map(g => g.id);
+    (guardado.combos || []).forEach(c => {
+      const p = productos[c.id];
+      if (!p || p.agotado || !tieneOpciones(p)) return;
+      if (!Array.isArray(c.gaseosas) || c.gaseosas.length !== p.gaseosasAElegir) return;
+      if (!c.gaseosas.every(g => disponibles.includes(g))) return;
+      combos.push({ uid: siguienteUid++, id: c.id, gaseosas: c.gaseosas });
+    });
   } catch (e) { /* ignoramos datos guardados rotos */ }
 }
 
 function totalUnidades() {
-  let total = 0;
+  let total = combos.length;   // cada renglón de combos es una unidad
   for (const id in carrito) total += carrito[id];
   return total;
 }
@@ -262,6 +304,7 @@ function totalUnidades() {
 function calcularSubtotal() {
   let total = 0;
   for (const id in carrito) total += productos[id].precio * carrito[id];
+  combos.forEach(c => { total += productos[c.id].precio; });
   return total;
 }
 
@@ -270,10 +313,26 @@ function zonaElegida() { return menu.zonas.find(z => z.id === $("#f-zona").value
 function calcularEnvio() { return (modoEntrega() === "delivery" && zonaElegida()) ? zonaElegida().costo : 0; }
 function calcularTotal() { return calcularSubtotal() + calcularEnvio(); }
 
+// Al redibujar se pierde el foco del teclado: esta función se lo devuelve al botón que corresponde.
+// "tarjeta" es la tarjeta donde se tocó (null si se tocó dentro del cajón).
+function devolverFoco(id, accion, tarjeta) {
+  let nuevo = null;
+  if (tarjeta) nuevo = $('[data-accion="' + accion + '"]', tarjeta) || $("[data-accion]", tarjeta);
+  else nuevo = $('#lineas [data-id="' + id + '"][data-accion="' + accion + '"]') || $("#lineas [data-accion], #lineas [data-quitar-combo]") || $("#vacio-cerrar");
+  if (nuevo) nuevo.focus();
+}
+
 // Suma o resta una unidad. "boton" es el botón que se tocó.
 function cambiarCantidad(id, cambio, boton) {
+  // Productos con gaseosas a elegir: "+" abre la ventana de elección y "-" quita el último que se agregó
+  if (tieneOpciones(productos[id])) {
+    if (cambio > 0) abrirSelector(id, null, boton);
+    else quitarUltimoCombo(id, boton);
+    return;
+  }
+
   const antes = carrito[id] || 0;
-  const despues = Math.max(0, Math.min(30, antes + cambio));
+  const despues = Math.max(0, Math.min(MAXIMO_POR_PRODUCTO, antes + cambio));
   if (despues === antes) return;
 
   const tarjeta = boton.closest(".tarjeta");
@@ -282,15 +341,155 @@ function cambiarCantidad(id, cambio, boton) {
   if (despues === 0) delete carrito[id]; else carrito[id] = despues;
   guardarCarrito();
   actualizarTodo();
-
-  // Al redibujar se pierde el foco del teclado: lo devolvemos al botón que corresponde
-  const accion = cambio > 0 ? "sumar" : "restar";
-  let nuevo = null;
-  if (tarjeta) nuevo = $('[data-accion="' + accion + '"]', tarjeta) || $("[data-accion]", tarjeta);
-  else nuevo = $('#lineas [data-id="' + id + '"][data-accion="' + accion + '"]') || $("#lineas [data-accion]") || $("#vacio-cerrar");
-  if (nuevo) nuevo.focus();
+  devolverFoco(id, cambio > 0 ? "sumar" : "restar", tarjeta);
 
   anunciar(productos[id].nombre + ": " + despues + " en el pedido. Total " + dinero.format(calcularTotal()) + ".");
+}
+
+// ----- Productos con gaseosas a elegir (Familiar, menú niños) -----
+
+// Quita la última unidad que se agregó de ese producto (el "-" de la tarjeta)
+function quitarUltimoCombo(id, boton) {
+  const indice = combos.map(c => c.id).lastIndexOf(id);
+  if (indice === -1) return;
+  const tarjeta = boton.closest(".tarjeta");
+  combos.splice(indice, 1);
+  guardarCarrito();
+  actualizarTodo();
+  devolverFoco(id, "restar", tarjeta);
+  anunciar(productos[id].nombre + ": " + cantidadDe(id) + " en el pedido. Total " + dinero.format(calcularTotal()) + ".");
+}
+
+// Quita un renglón puntual desde el cajón del pedido (botón "Quitar")
+function quitarCombo(uid) {
+  const combo = combos.find(c => c.uid === uid);
+  if (!combo) return;
+  combos = combos.filter(c => c.uid !== uid);
+  guardarCarrito();
+  actualizarTodo();
+  anunciar(productos[combo.id].nombre + " quitado del pedido. Total " + dinero.format(calcularTotal()) + ".");
+  const siguiente = $("#lineas [data-quitar-combo], #lineas [data-accion]") || $("#vacio-cerrar");
+  if (siguiente) siguiente.focus();
+}
+
+// Abre la ventana para elegir las gaseosas. Si "uid" es null es un combo nuevo; si no, se edita ese renglón.
+function abrirSelector(id, uid, origen) {
+  const p = productos[id];
+  const cantidades = {};   // gaseosa -> cuántas. Ejemplo: { "beb-coca": 2, "beb-sprite": 1 }
+
+  if (uid === null) {
+    if (cantidadDe(id) >= MAXIMO_POR_PRODUCTO) {
+      anunciar("El máximo es de " + MAXIMO_POR_PRODUCTO + " unidades de " + p.nombre + ".");
+      return;
+    }
+  } else {
+    // Al editar arrancamos con lo que ya estaba elegido (salvo las gaseosas que se hayan agotado)
+    const combo = combos.find(c => c.uid === uid);
+    const disponibles = gaseosasDisponibles().map(g => g.id);
+    if (combo) combo.gaseosas.forEach(g => { if (disponibles.includes(g)) cantidades[g] = (cantidades[g] || 0) + 1; });
+  }
+
+  selector = { id: id, uid: uid, origen: origen, cantidades: cantidades };
+  dibujarSelector();
+  $("#selector").showModal();
+  const primero = $('#selector-caja [data-delta="1"]:not([disabled])');
+  if (primero) primero.focus();
+}
+
+function totalElegido() {
+  return Object.values(selector.cantidades).reduce((suma, n) => suma + n, 0);
+}
+
+// Dibuja el contenido de la ventana: una fila por gaseosa con "-", cantidad y "+"
+function dibujarSelector() {
+  const p = productos[selector.id];
+  const necesarias = p.gaseosasAElegir;
+  const elegidas = totalElegido();
+  const completo = elegidas === necesarias;
+  const sabores = gaseosasDisponibles();
+
+  const filas = sabores.map(s => {
+    const n = selector.cantidades[s.id] || 0;
+    // Con una sola gaseosa a elegir el "+" siempre sirve (cambia la elección). Con varias, se bloquea al completar.
+    const bloquearMas = completo && necesarias > 1;
+    return `
+      <li>
+        <span class="sabor-nombre">${esc(s.nombre)}</span>
+        <div class="cantidad" role="group" aria-label="Cantidad de ${esc(s.nombre)}">
+          <button type="button" data-sabor="${esc(s.id)}" data-delta="-1" aria-label="Quitar ${esc(s.nombre)}" ${n === 0 ? "disabled" : ""}>${iconoChico("menos")}</button>
+          <output>${n}</output>
+          <button type="button" data-sabor="${esc(s.id)}" data-delta="1" aria-label="Agregar ${esc(s.nombre)}" ${bloquearMas ? "disabled" : ""}>${iconoChico("mas")}</button>
+        </div>
+      </li>`;
+  }).join("");
+
+  const consigna = necesarias === 1 ? "Elegí 1 gaseosa." : "Elegí " + necesarias + " gaseosas. Se pueden repetir.";
+  $("#selector-caja").innerHTML = `
+    <h3 id="selector-titulo">Elegí tus gaseosas</h3>
+    <p class="ayuda">${esc(p.nombre)}. ${consigna}</p>
+    ${sabores.length > 0 ? '<ul class="sabores">' + filas + "</ul>" : '<p class="error">Hoy no hay gaseosas disponibles para este producto.</p>'}
+    <p class="contador-sabores">Elegiste ${elegidas} de ${necesarias}</p>
+    <div class="selector-botones">
+      <button type="button" class="btn btn-borde" data-selector="cancelar">Cancelar</button>
+      <button type="button" class="btn btn-rojo" data-selector="confirmar" ${completo ? "" : "disabled"}>${selector.uid === null ? "Agregar al pedido" : "Guardar cambios"}</button>
+    </div>`;
+  $("#selector-aviso").textContent = "Elegiste " + elegidas + " de " + necesarias + ".";
+}
+
+// Suma o resta una gaseosa en la ventana
+function cambiarSabor(idSabor, cambio) {
+  const necesarias = productos[selector.id].gaseosasAElegir;
+
+  if (necesarias === 1) {
+    // Con una sola gaseosa, tocar otra "+" reemplaza la anterior
+    if (cambio > 0) selector.cantidades = { [idSabor]: 1 };
+    else delete selector.cantidades[idSabor];
+  } else {
+    const nuevo = (selector.cantidades[idSabor] || 0) + cambio;
+    if (nuevo < 0) return;
+    if (cambio > 0 && totalElegido() >= necesarias) return;
+    if (nuevo === 0) delete selector.cantidades[idSabor]; else selector.cantidades[idSabor] = nuevo;
+  }
+  dibujarSelector();
+
+  // Al redibujar se pierde el foco: volvemos al mismo botón (o al otro de la misma gaseosa si quedó bloqueado)
+  const mismo = $('#selector-caja [data-sabor="' + idSabor + '"][data-delta="' + cambio + '"]');
+  const otro = $('#selector-caja [data-sabor="' + idSabor + '"]:not([disabled])');
+  const destino = (mismo && !mismo.disabled) ? mismo : otro;
+  if (destino) destino.focus();
+}
+
+// Guarda lo elegido en el carrito (como renglón nuevo o cambiando el renglón que se estaba editando)
+function confirmarSelector() {
+  const p = productos[selector.id];
+  if (totalElegido() !== p.gaseosasAElegir) return;
+
+  // De { "beb-coca": 2, "beb-sprite": 1 } pasamos a la lista [ "beb-coca", "beb-coca", "beb-sprite" ]
+  const lista = [];
+  for (const idGaseosa in selector.cantidades) {
+    for (let i = 0; i < selector.cantidades[idGaseosa]; i++) lista.push(idGaseosa);
+  }
+
+  const { id, uid, origen } = selector;   // los copiamos antes de cerrar, porque al cerrar "selector" se vacía
+  const tarjeta = origen ? origen.closest(".tarjeta") : null;
+  $("#selector").close();
+
+  if (uid === null) {
+    if (tarjeta) volarAlCarrito(origen);   // animación: se hace antes de redibujar
+    combos.push({ uid: siguienteUid++, id: id, gaseosas: lista });
+  } else {
+    const combo = combos.find(c => c.uid === uid);
+    if (combo) combo.gaseosas = lista;
+  }
+  guardarCarrito();
+  actualizarTodo();
+  anunciar(productos[id].nombre + " con " + textoGaseosas(lista) + ". Total " + dinero.format(calcularTotal()) + ".");
+
+  if (tarjeta) devolverFoco(id, "sumar", tarjeta);
+  else {
+    const editar = $('[data-editar-combo="' + uid + '"]');
+    if (editar) editar.focus();
+  }
 }
 
 // Vuelve a dibujar todo lo que depende del carrito
@@ -331,6 +530,19 @@ function actualizarTodo() {
         </div>
       </li>`;
   }
+  // Productos con gaseosas: un renglón por unidad, con el detalle y los botones para cambiarlo o quitarlo
+  combos.forEach(c => {
+    const p = productos[c.id];
+    lineas += `
+      <li>
+        <div><b>${esc(p.nombre)}</b><div class="sub">${esc(textoGaseosas(c.gaseosas))}</div></div>
+        <div class="importe">${dinero.format(p.precio)}</div>
+        <div class="acciones-linea">
+          <button type="button" class="copiar" data-editar-combo="${c.uid}">Cambiar gaseosas</button>
+          <button type="button" class="copiar" data-quitar-combo="${c.uid}" aria-label="Quitar ${esc(p.nombre)} del pedido">Quitar</button>
+        </div>
+      </li>`;
+  });
   $("#lineas").innerHTML = lineas;
 
   $("#resumen").innerHTML = `
@@ -395,7 +607,8 @@ function validarFormulario() {
 function leerPedidoDelFormulario() {
   const f = $("#formulario").elements;
   const items = [];
-  for (const id in carrito) items.push({ productoId: id, cantidad: carrito[id] });
+  for (const id in carrito) items.push({ productoId: id, cantidad: carrito[id], gaseosas: [] });
+  combos.forEach(c => items.push({ productoId: c.id, cantidad: 1, gaseosas: c.gaseosas }));
   return {
     nombre: f.nombre.value.trim(),
     telefono: f.telefono.value.trim(),
@@ -436,7 +649,10 @@ async function enviarPedido(datos) {
 
 // Solo para el modo demo: calcula lo mismo que calcularía el servidor
 function pedidoDeEjemplo(datos) {
-  const lineas = datos.items.map(i => ({ nombre: productos[i.productoId].nombre, cantidad: i.cantidad, precio: productos[i.productoId].precio }));
+  const lineas = datos.items.map(i => ({
+    nombre: productos[i.productoId].nombre, cantidad: i.cantidad, precio: productos[i.productoId].precio,
+    detalle: (i.gaseosas && i.gaseosas.length > 0) ? textoGaseosas(i.gaseosas) : null
+  }));
   const subtotal = lineas.reduce((suma, l) => suma + l.precio * l.cantidad, 0);
   const zona = menu.zonas.find(z => z.id === datos.zonaId);
   const envio = (datos.modo === "delivery" && zona) ? zona.costo : 0;
@@ -482,6 +698,7 @@ async function alConfirmar(evento) {
   actualizarBotonConfirmar();
 
   carrito = {};
+  combos = [];
   guardarCarrito();
   $("#formulario").reset();
   mostrarConfirmacion(resultado.pedido, datos);
@@ -517,6 +734,7 @@ function cerrarCajon() {
 
 // Mantiene el foco del teclado dentro del cajón mientras está abierto
 function atraparFoco(evento) {
+  if ($("#selector").open) return;   // la ventana de gaseosas maneja sola el foco y la tecla Escape
   if ($("#cajon").hidden) return;
   if (evento.key === "Escape") { cerrarCajon(); return; }
   if (evento.key !== "Tab") return;
@@ -545,7 +763,7 @@ function textoParaWhatsApp(pedido, datos) {
   const l = ["Pedido CRAVE " + pedido.numero, "Nombre: " + pedido.nombre, "Teléfono: " + datos.telefono];
   l.push("Entrega: " + (datos.modo === "delivery" ? "delivery a " + pedido.direccion + (datos.referencias ? ". Ref.: " + datos.referencias : "") : "retiro en el local"));
   l.push("Horario: " + datos.hora + " hs", "");
-  pedido.lineas.forEach(x => l.push(x.cantidad + " x " + x.nombre + " — " + dinero.format(x.cantidad * x.precio)));
+  pedido.lineas.forEach(x => l.push(x.cantidad + " x " + x.nombre + (x.detalle ? " (" + x.detalle + ")" : "") + " — " + dinero.format(x.cantidad * x.precio)));
   l.push("", "Subtotal: " + dinero.format(pedido.subtotal), "Envío: " + dinero.format(pedido.envio), "Total: " + dinero.format(pedido.total));
   l.push("Pago: " + (datos.pago === "transferencia" ? "transferencia (envío comprobante)" : "efectivo" + (datos.abonaCon ? ", abono con " + dinero.format(datos.abonaCon) : ", pago exacto")));
   if (datos.notas) l.push("Aclaraciones: " + datos.notas);
@@ -567,7 +785,7 @@ function mostrarConfirmacion(pedido, datos) {
     <h3 id="final-titulo" tabindex="-1">Pedido <span style="white-space:nowrap">${esc(pedido.numero)}</span> registrado</h3>
     <p class="ayuda" style="margin-top:8px">${datos.modo === "delivery" ? "Te lo llevamos a " + esc(pedido.direccion) : "Lo retirás en el local"}. Horario: ${esc(datos.hora)} hs.</p>
     <ul class="lineas-pedido" style="margin-top:14px">
-      ${pedido.lineas.map(x => `<li><div><b>${x.cantidad} × ${esc(x.nombre)}</b></div><div class="importe">${dinero.format(x.cantidad * x.precio)}</div></li>`).join("")}
+      ${pedido.lineas.map(x => `<li><div><b>${x.cantidad} × ${esc(x.nombre)}</b>${x.detalle ? '<div class="sub">' + esc(x.detalle) + "</div>" : ""}</div><div class="importe">${dinero.format(x.cantidad * x.precio)}</div></li>`).join("")}
     </ul>
     <div class="resumen">
       <div><span>Subtotal</span><span>${dinero.format(pedido.subtotal)}</span></div>
@@ -698,6 +916,26 @@ function seguirSeccion() {
 // Un solo "escuchador" de clicks para todos los botones "+", "-" y los enlaces internos
 document.addEventListener("click", evento => {
   if (evento.target.closest("[data-reintentar]")) { refrescarFranjas(); return; }
+
+  // Ventana de gaseosas y renglones de combos
+  const sabor = evento.target.closest("[data-sabor]");
+  if (sabor) { cambiarSabor(sabor.dataset.sabor, Number(sabor.dataset.delta)); return; }
+  const accionSelector = evento.target.closest("[data-selector]");
+  if (accionSelector) {
+    if (accionSelector.dataset.selector === "confirmar") confirmarSelector();
+    else $("#selector").close();
+    return;
+  }
+  const editar = evento.target.closest("[data-editar-combo]");
+  if (editar) {
+    const uid = Number(editar.dataset.editarCombo);
+    const combo = combos.find(c => c.uid === uid);
+    if (combo) abrirSelector(combo.id, uid, editar);
+    return;
+  }
+  const quitar = evento.target.closest("[data-quitar-combo]");
+  if (quitar) { quitarCombo(Number(quitar.dataset.quitarCombo)); return; }
+
   const boton = evento.target.closest("[data-accion]");
   if (boton) {
     cambiarCantidad(boton.dataset.id, boton.dataset.accion === "sumar" ? 1 : -1, boton);
@@ -725,6 +963,10 @@ $("#cerrar").addEventListener("click", cerrarCajon);
 $("#velo").addEventListener("click", cerrarCajon);
 $("#vacio-cerrar").addEventListener("click", () => { cerrarCajon(); $("#carta").scrollIntoView(); });
 document.addEventListener("keydown", atraparFoco);
+
+// Ventana de gaseosas: se cierra tocando el fondo oscuro, y al cerrarse (también con Escape) se limpia lo elegido
+$("#selector").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$("#selector").addEventListener("close", () => { selector = null; });
 
 $("#formulario").addEventListener("change", sincronizarFormulario);
 $("#formulario").addEventListener("input", e => {

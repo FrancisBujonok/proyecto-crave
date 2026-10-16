@@ -32,6 +32,58 @@ public class PedidoService
         return await _db.Zonas.FirstOrDefaultAsync(z => z.Id == pedido.ZonaId);
     }
 
+    // Las gaseosas que se pueden elegir en un combo son los productos de esta categoría.
+    // Así, si en el panel se marca una gaseosa como agotada, deja de ofrecerse en todos los combos.
+    const string CategoriaBebidas = "bebidas";
+
+    // Trae las gaseosas de la base. Devuelve un diccionario: id -> producto.
+    async Task<Dictionary<string, Producto>> BuscarGaseosas()
+    {
+        return await _db.Productos.Where(p => p.CategoriaId == CategoriaBebidas).ToDictionaryAsync(p => p.Id);
+    }
+
+    // Revisa las gaseosas elegidas en un renglón. Un producto con "gaseosas a elegir" necesita
+    // exactamente GaseosasAElegir x Cantidad gaseosas, y cada una tiene que existir y no estar agotada.
+    static void ValidarGaseosas(ItemPedido item, Producto producto, Dictionary<string, Producto> gaseosas, List<string> errores)
+    {
+        var elegidas = item.Gaseosas ?? new List<string>();   // si el JSON trae null, lo tratamos como lista vacía
+
+        if (producto.GaseosasAElegir == 0)
+        {
+            if (elegidas.Count > 0)
+                errores.Add(producto.Nombre + " no lleva gaseosa a elección.");
+            return;
+        }
+
+        if (elegidas.Count != producto.GaseosasAElegir * item.Cantidad)
+        {
+            errores.Add("Elegí las gaseosas de " + producto.Nombre + ".");
+            return;
+        }
+
+        foreach (var id in elegidas)
+        {
+            if (id == null || !gaseosas.TryGetValue(id, out var gaseosa))
+                errores.Add("Hay una gaseosa que ya no está en la carta.");
+            else if (gaseosa.Agotado)
+                errores.Add(gaseosa.Nombre + " está agotada.");
+        }
+    }
+
+    // Convierte las gaseosas elegidas en el texto que se guarda y se muestra.
+    // Ejemplo: [coca, coca, sprite] -> "2 × Coca-Cola, 1 × Sprite". Con una sola gaseosa: solo el nombre.
+    static string? ArmarDetalle(List<string>? elegidas, Dictionary<string, Producto> gaseosas)
+    {
+        if (elegidas == null || elegidas.Count == 0) return null;
+        if (elegidas.Count == 1) return gaseosas[elegidas[0]].Nombre;
+
+        // GroupBy junta las repetidas y mantiene el orden en que aparecen
+        var partes = elegidas
+            .GroupBy(id => id)
+            .Select(grupo => grupo.Count() + " × " + gaseosas[grupo.Key].Nombre);
+        return string.Join(", ", partes);
+    }
+
     static int CalcularSubtotal(PedidoNuevo pedido, Dictionary<string, Producto> productos)
     {
         int subtotal = 0;
@@ -50,6 +102,7 @@ public class PedidoService
     {
         var errores = new List<string>();
         var productos = await BuscarProductos(pedido);
+        var gaseosas = await BuscarGaseosas();
         var zona = await BuscarZona(pedido);
 
         if (pedido.Nombre.Trim().Length < 3)
@@ -69,14 +122,31 @@ public class PedidoService
 
         foreach (var item in pedido.Items)
         {
+            bool cantidadValida = item.Cantidad >= 1 && item.Cantidad <= 30;
+            if (!cantidadValida)
+                errores.Add("La cantidad de cada producto tiene que estar entre 1 y 30.");
+
             if (!productos.TryGetValue(item.ProductoId, out var producto))
+            {
                 errores.Add("Hay un producto que ya no está en la carta.");
-            else if (producto.Agotado)
+                continue;   // sin producto no hay nada más que revisar en este renglón
+            }
+
+            if (producto.Agotado)
                 errores.Add(producto.Nombre + " está agotado.");
 
-            if (item.Cantidad < 1 || item.Cantidad > 30)
-                errores.Add("La cantidad de cada producto tiene que estar entre 1 y 30.");
+            // Las gaseosas solo se revisan si la cantidad es razonable (evita cuentas con números enormes)
+            if (cantidadValida)
+                ValidarGaseosas(item, producto, gaseosas, errores);
         }
+
+        // Un mismo producto puede llegar en varios renglones (ej.: dos combos con gaseosas distintas).
+        // Sumamos todos los renglones para respetar el máximo de 30 por producto.
+        bool pasaElMaximo = pedido.Items
+            .GroupBy(i => i.ProductoId)
+            .Any(grupo => grupo.Sum(i => (long)i.Cantidad) > 30);
+        if (pasaElMaximo)
+            errores.Add("La cantidad de cada producto tiene que estar entre 1 y 30.");
 
         if (pedido.Modo == "delivery")
         {
@@ -97,7 +167,7 @@ public class PedidoService
         if (pedido.Pago == "efectivo" && pedido.AbonaCon > 0 && pedido.AbonaCon < total)
             errores.Add("Con lo que abonás no alcanza para cubrir el total.");
 
-        return errores;
+        return errores.Distinct().ToList();   // Distinct saca los mensajes repetidos (ej.: dos renglones con el mismo problema)
     }
 
     // Arma el pedido final y lo guarda. Solo se llama después de Validar (sin errores).
@@ -105,6 +175,7 @@ public class PedidoService
     public async Task<PedidoCreado?> Crear(PedidoNuevo pedido)
     {
         var productos = await BuscarProductos(pedido);
+        var gaseosas = await BuscarGaseosas();
         var zona = await BuscarZona(pedido);
 
         int subtotal = CalcularSubtotal(pedido, productos);
@@ -152,7 +223,8 @@ public class PedidoService
                 ProductoId = producto.Id,
                 Nombre = producto.Nombre,
                 Cantidad = item.Cantidad,
-                Precio = producto.Precio
+                Precio = producto.Precio,
+                Detalle = ArmarDetalle(item.Gaseosas, gaseosas)   // null si el producto no lleva gaseosas a elegir
             });
         }
 
@@ -190,7 +262,7 @@ public class PedidoService
             Envio = envio,
             Total = total,
             Vuelto = vuelto,
-            Lineas = nuevo.Items.Select(i => new LineaPedido { Nombre = i.Nombre, Cantidad = i.Cantidad, Precio = i.Precio }).ToList()
+            Lineas = nuevo.Items.Select(i => new LineaPedido { Nombre = i.Nombre, Cantidad = i.Cantidad, Precio = i.Precio, Detalle = i.Detalle }).ToList()
         };
     }
 }

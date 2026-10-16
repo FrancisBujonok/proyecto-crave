@@ -15,4 +15,8 @@ public class Producto
     public bool Agotado { get; set; }
     public bool Destacado { get; set; }             // true = aparece también en la fila de Combos
     public int Orden { get; set; }                  // para ordenar dentro de la categoría
+
+    // Cuántas gaseosas elige el cliente al pedir este producto. 0 = ninguna (la mayoría de los productos).
+    // Ejemplo: "Familiar para 4" tiene 4, el menú niños tiene 1. Las opciones salen de la categoría "bebidas".
+    public int GaseosasAElegir { get; set; }
 }

@@ -23,7 +23,7 @@ public class Pedido
     public int Total { get; set; }
     public int Vuelto { get; set; }
     public string? Notas { get; set; }
-    public string Estado { get; set; } = "nuevo";    // nuevo, preparando, en_camino, entregado, cancelado
+    public string Estado { get; set; } = "nuevo";    // nuevo, preparando, listo, entregado, cancelado
     public List<PedidoItem> Items { get; set; } = new();
 }
 
@@ -36,4 +36,5 @@ public class PedidoItem
     public string Nombre { get; set; } = "";         // copia del nombre al momento de comprar
     public int Cantidad { get; set; }
     public int Precio { get; set; }                  // copia del precio al momento de comprar
+    public string? Detalle { get; set; }             // gaseosas elegidas, ej.: "2 × Coca-Cola, 1 × Sprite" (null si no hay nada que elegir)
 }

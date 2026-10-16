@@ -7,6 +7,10 @@ public class ItemPedido
 {
     public string ProductoId { get; set; } = "";
     public int Cantidad { get; set; }
+
+    // Solo para productos con "gaseosas a elegir": el id de cada gaseosa elegida (se pueden repetir).
+    // Ejemplo para un Familiar para 4: [ "beb-coca", "beb-coca", "beb-sprite", "beb-fanta" ]
+    public List<string> Gaseosas { get; set; } = new();
 }
 
 public class PedidoNuevo
@@ -32,6 +36,7 @@ public class LineaPedido
     public string Nombre { get; set; } = "";
     public int Cantidad { get; set; }
     public int Precio { get; set; }
+    public string? Detalle { get; set; }   // gaseosas elegidas, para mostrar debajo del nombre
 }
 
 public class PedidoCreado

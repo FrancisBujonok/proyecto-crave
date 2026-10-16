@@ -3,6 +3,7 @@
 -- Pegalo entero en el SQL Editor y tocá "Run".
 -- CUIDADO: empieza borrando las tablas para poder correrlo de nuevo mientras
 -- están vacías. Cuando ya haya pedidos reales, NO lo vuelvas a correr.
+-- Después de este script, corré sql/02-menu-real.sql para cargar la carta real.
 -- =====================================================================
 
 drop table if exists pedido_items;
@@ -31,7 +32,8 @@ create table productos (
   etiqueta      text,
   agotado       boolean not null default false,
   destacado     boolean not null default false,
-  orden         int     not null default 0
+  orden         int     not null default 0,
+  gaseosas_a_elegir int not null default 0   -- cuántas gaseosas elige el cliente en este producto (0 = ninguna)
 );
 
 create table zonas (
@@ -59,7 +61,7 @@ create table pedidos (
   total       int  not null,
   vuelto      int  not null default 0,
   notas       text,
-  estado      text not null default 'nuevo'   -- nuevo, preparando, en_camino, entregado, cancelado
+  estado      text not null default 'nuevo'   -- nuevo, preparando, listo, entregado, cancelado
 );
 
 -- Para contar rápido cuántos pedidos hay en un horario de un día
@@ -71,7 +73,8 @@ create table pedido_items (
   producto_id  text,                   -- sin clave foránea a propósito: el pedido viejo no debe romperse si cambia la carta
   nombre       text not null,          -- copia del nombre al momento de comprar
   cantidad     int  not null,
-  precio       int  not null           -- copia del precio al momento de comprar
+  precio       int  not null,          -- copia del precio al momento de comprar
+  detalle      text                    -- gaseosas elegidas, ej.: "2 × Coca-Cola, 1 × Sprite"
 );
 
 -- ---------- SEGURIDAD ----------
