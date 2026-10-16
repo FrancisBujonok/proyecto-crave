@@ -14,5 +14,7 @@ COPY --from=compilar /app .
 
 # Render espera que el servidor escuche en el puerto 10000.
 ENV ASPNETCORE_URLS=http://0.0.0.0:10000
+# Render pone un proxy delante del servidor. Esto hace que la app lea la IP real del visitante y sepa que entró por https.
+ENV ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
 EXPOSE 10000
 ENTRYPOINT ["dotnet", "Crave.dll"]

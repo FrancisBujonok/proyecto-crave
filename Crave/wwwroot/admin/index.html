@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">   <!-- que Google no muestre esta página -->
+  <title>Panel CRAVE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="caja">
+    <h1>CRAVE <span>panel</span></h1>
+
+    <!-- Pantalla 1: pedir la contraseña -->
+    <form id="form-login" hidden>
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" autocomplete="current-password" maxlength="200" required>
+      <p class="error" id="error" role="alert"></p>
+      <button type="submit" id="boton-entrar">Entrar</button>
+    </form>
+
+    <!-- Pantalla 2: sesión iniciada (por ahora solo un aviso; en los próximos pasos acá van los pedidos) -->
+    <section id="panel" hidden>
+      <p>Sesión iniciada. Acá van a aparecer los pedidos del día.</p>
+      <button type="button" id="boton-salir" class="secundario">Salir</button>
+    </section>
+  </main>
+  <script src="admin.js"></script>
+</body>
+</html>

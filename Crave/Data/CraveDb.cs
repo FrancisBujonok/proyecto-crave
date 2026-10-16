@@ -1,11 +1,12 @@
 using Crave.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crave.Data;
 
 // Esta clase representa la base de datos de Supabase. Cada DbSet es una tabla.
 // Para pedir datos se escribe algo como:  db.Productos.Where(p => p.Precio < 5000).ToListAsync()
-public class CraveDb : DbContext
+public class CraveDb : DbContext, IDataProtectionKeyContext
 {
     public CraveDb(DbContextOptions<CraveDb> opciones) : base(opciones) { }
 
@@ -15,6 +16,11 @@ public class CraveDb : DbContext
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<PedidoItem> PedidoItems => Set<PedidoItem>();
 
+    // Claves con las que ASP.NET firma la cookie de sesión del panel. Se guardan en la base
+    // porque el servidor de Render se borra y se recrea en cada deploy: si las claves vivieran en el disco,
+    // cada deploy cerraría la sesión del dueño.
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     // Acá le explicamos a Entity Framework cómo se llaman las tablas y las relaciones
     protected override void OnModelCreating(ModelBuilder modelo)
     {
@@ -23,6 +29,7 @@ public class CraveDb : DbContext
         modelo.Entity<Zona>().ToTable("zonas");
         modelo.Entity<Pedido>().ToTable("pedidos");
         modelo.Entity<PedidoItem>().ToTable("pedido_items");
+        modelo.Entity<DataProtectionKey>().ToTable("claves_sesion");
 
         // Una categoría tiene muchos productos
         modelo.Entity<Categoria>()

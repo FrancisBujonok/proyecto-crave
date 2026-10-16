@@ -1,6 +1,8 @@
 using Crave.Data;
+using Crave.Endpoints;
 using Crave.Models;
 using Crave.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +19,15 @@ builder.Services.AddDbContext<CraveDb>(opciones => opciones.UseNpgsql(cadena));
 builder.Services.AddScoped<HorarioService>();   // se crea uno nuevo por cada pedido que llega
 builder.Services.AddScoped<PedidoService>();
 
+// Las claves de la cookie de sesión se guardan en la tabla claves_sesion (ver sql/03-claves-sesion.sql).
+builder.Services.AddDataProtection()
+    .SetApplicationName("Crave")
+    .PersistKeysToDbContext<CraveDb>();
+builder.Services.AgregarAdmin();   // login del panel: cookie, autorización y límite de intentos
+
 var app = builder.Build();
+
+app.UsarAdmin();   // identifica al dueño en cada pedido y aplica el límite de intentos
 
 app.UseDefaultFiles();   // sirve wwwroot/index.html cuando se entra a "/"
 app.UseStaticFiles();    // sirve css, js e imágenes de la carpeta wwwroot
@@ -58,6 +68,8 @@ app.MapPost("/api/pedidos", async (PedidoNuevo pedido, PedidoService servicio) =
     }
     return Results.Ok(creado);                         // 200 con el pedido ya calculado
 });
+
+app.MapearAdmin();   // /api/admin/login, /api/admin/logout, /api/admin/yo
 
 // Solo para probar mientras desarrollás: ver los últimos pedidos guardados.
 // No existe cuando la app se publica, porque muestra datos de clientes.
