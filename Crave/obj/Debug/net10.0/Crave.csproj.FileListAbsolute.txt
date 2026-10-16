@@ -15,9 +15,6 @@ C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\rjimswa.d
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\scopedcss\bundle\Crave.styles.css
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\dh3rerm3l6-{0}-70buiy4ite-70buiy4ite.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\sfdfj6cka3-{0}-g8ya79stbq-g8ya79stbq.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\g3ndkas6pk-{0}-3koy2t16lk-3koy2t16lk.gz
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\n9jtu8xzbt-{0}-g1xqefjdhd-g1xqefjdhd.gz
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\staticwebassets.build.json
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\staticwebassets.build.json.cache
@@ -69,3 +66,13 @@ C:\Users\Laboratorio_02\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\
 C:\Users\Laboratorio_02\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\dh3rerm3l6-{0}-k69qra3uzq-k69qra3uzq.gz
 C:\Users\Laboratorio_02\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\sfdfj6cka3-{0}-z16wijgfh6-z16wijgfh6.gz
 C:\Users\Laboratorio_02\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\g3ndkas6pk-{0}-izxtzqfv3z-izxtzqfv3z.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.dll
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Npgsql.dll
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.csproj.AssemblyReference.cache
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\dh3rerm3l6-{0}-17r2hjon6m-17r2hjon6m.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\sfdfj6cka3-{0}-ws0rxkusbe-ws0rxkusbe.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\g3ndkas6pk-{0}-6rtt8ctkwf-6rtt8ctkwf.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.csproj.Up2Date
