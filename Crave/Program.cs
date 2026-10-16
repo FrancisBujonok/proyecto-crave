@@ -22,6 +22,7 @@ builder.Services.AddDbContext<CraveDb>(opciones => opciones.UseNpgsql(cadena));
 builder.Services.AddScoped<IConfigService, ConfigService>();   // configuración del local (horarios, cupo, abierto/cerrado)
 builder.Services.AddScoped<HorarioService>();   // se crea uno nuevo por cada pedido que llega
 builder.Services.AddScoped<PedidoService>();
+builder.Services.AddScoped<SeguimientoService>();   // el cliente mira el estado de su pedido con un código
 builder.Services.AddScoped<IChequeoBase, ChequeoBase>();   // consulta chica a la base (la usan /api/salud y el latido)
 builder.Services.AddHostedService<LatidoBaseDeDatos>();     // cada 6 horas toca la base para que Supabase no la pause
 builder.Services.AddScoped<IAdminService, AdminService>();   // lo que usa el panel de administración
@@ -77,6 +78,18 @@ app.MapGet("/api/franjas", async (HorarioService horarios) => new
     franjas = await horarios.ObtenerFranjas(),
     aviso = await horarios.MensajeSinFranjas()
 }).RequireRateLimiting(Limites.PoliticaLectura);
+
+// El cliente mira el estado de SU pedido con el código largo que viene en su enlace (/seguimiento.html?c=CODIGO).
+// Es público, así que solo devuelve lo mínimo (ver SeguimientoPedido): nunca nombre, teléfono ni dirección.
+// Si el código no existe o está mal escrito, la respuesta es la misma: 404.
+app.MapGet("/api/seguimiento/{codigo}", async (string codigo, SeguimientoService seguimiento, HttpContext http) =>
+{
+    http.Response.Headers.CacheControl = "no-store";   // que ningún navegador ni proxy guarde un estado viejo
+    var pedido = await seguimiento.Buscar(codigo);
+    return pedido == null
+        ? Results.NotFound(new { error = "No encontramos ese pedido. Revisá el enlace." })
+        : Results.Ok(pedido);
+}).RequireRateLimiting(Limites.PoliticaSeguimiento);   // máximo 30 consultas por minuto por IP
 
 // La página manda el pedido acá. C# convierte el JSON recibido en un objeto PedidoNuevo.
 app.MapPost("/api/pedidos", async (PedidoNuevo pedido, PedidoService servicio, HttpContext http, ILoggerFactory logs) =>

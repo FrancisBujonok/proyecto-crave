@@ -47,6 +47,7 @@ public class LineaPedido
 public class PedidoCreado
 {
     public string Numero { get; set; } = "";
+    public string Codigo { get; set; } = "";   // código de seguimiento: va en el enlace /seguimiento.html?c=CODIGO
     public DateTime Fecha { get; set; }
     public string Nombre { get; set; } = "";
     public string Telefono { get; set; } = "";

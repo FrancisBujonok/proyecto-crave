@@ -769,6 +769,11 @@ function copiarTexto(texto, boton, etiqueta) {
   else planB();
 }
 
+// Enlace para que el cliente siga su pedido. El servidor manda "codigo" (largo y al azar); en el modo demo no hay y devuelve "".
+function enlaceSeguimiento(pedido) {
+  return pedido.codigo ? location.origin + "/seguimiento.html?c=" + encodeURIComponent(pedido.codigo) : "";
+}
+
 function textoParaWhatsApp(pedido, datos) {
   const l = ["Pedido CRAVE " + pedido.numero, "Nombre: " + pedido.nombre, "Teléfono: " + datos.telefono];
   l.push("Entrega: " + (datos.modo === "delivery" ? "delivery a " + pedido.direccion + (datos.referencias ? ". Ref.: " + datos.referencias : "") : "retiro en el local"));
@@ -777,6 +782,7 @@ function textoParaWhatsApp(pedido, datos) {
   l.push("", "Subtotal: " + dinero.format(pedido.subtotal), "Envío: " + dinero.format(pedido.envio), "Total: " + dinero.format(pedido.total));
   l.push("Pago: " + (datos.pago === "transferencia" ? "transferencia (envío comprobante)" : "efectivo" + (datos.abonaCon ? ", abono con " + dinero.format(datos.abonaCon) : ", pago exacto")));
   if (datos.notas) l.push("Aclaraciones: " + datos.notas);
+  if (pedido.codigo) l.push("", "Seguí tu pedido: " + enlaceSeguimiento(pedido));
   return l.join("\n");
 }
 
@@ -805,6 +811,7 @@ function mostrarConfirmacion(pedido, datos) {
     <div class="pila">
       ${pago}
       <a class="btn btn-rojo" href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(mensaje)}" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a>
+      ${pedido.codigo ? `<a class="btn btn-borde" id="final-seguir" href="${esc(enlaceSeguimiento(pedido))}" target="_blank" rel="noopener">Seguir mi pedido</a>` : ""}
       <button class="btn btn-borde" type="button" id="final-copiar-resumen">Copiar resumen del pedido</button>
       <button class="btn btn-borde" type="button" id="final-otro">Hacer otro pedido</button>
       ${MODO_DEMO ? '<p class="aviso-final">Demo: acá no se envía nada. En el proyecto con servidor, el pedido se valida y se guarda en C#.</p>' : ""}

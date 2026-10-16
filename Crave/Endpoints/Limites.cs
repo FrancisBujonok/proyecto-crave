@@ -10,6 +10,7 @@ public static class Limites
     public const string PoliticaLogin = "login-admin";   // 5 intentos de login cada 10 minutos
     public const string PoliticaPedidos = "pedidos";     // 10 envíos de pedido cada 10 minutos
     public const string PoliticaLectura = "lectura";     // 60 lecturas de la carta o los horarios por minuto
+    public const string PoliticaSeguimiento = "seguimiento";   // 30 consultas de seguimiento de pedido por minuto
 
     // Una regla "máximo N cada tanto por IP"
     static RateLimitPartition<string> PorIp(HttpContext contexto, int maximo, TimeSpan ventana)
@@ -33,6 +34,8 @@ public static class Limites
             opciones.AddPolicy(PoliticaLogin, contexto => PorIp(contexto, 5, TimeSpan.FromMinutes(10)));
             opciones.AddPolicy(PoliticaPedidos, contexto => PorIp(contexto, 10, TimeSpan.FromMinutes(10)));
             opciones.AddPolicy(PoliticaLectura, contexto => PorIp(contexto, 60, TimeSpan.FromMinutes(1)));
+            // La página de seguimiento pregunta cada 15 segundos (4 por minuto): 30 alcanza de sobra y frena a quien pruebe códigos
+            opciones.AddPolicy(PoliticaSeguimiento, contexto => PorIp(contexto, 30, TimeSpan.FromMinutes(1)));
 
             // Qué se responde cuando alguien se pasa. "error" lo lee el login del panel y "errores" lo lee la tienda.
             opciones.OnRejected = async (contexto, cancelacion) =>

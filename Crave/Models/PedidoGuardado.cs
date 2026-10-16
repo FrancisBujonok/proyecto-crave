@@ -25,6 +25,7 @@ public class Pedido
     public int Vuelto { get; set; }
     public string? Notas { get; set; }
     public string Estado { get; set; } = "nuevo";    // nuevo, preparando, listo, entregado, cancelado
+    public string? CodigoSeguimiento { get; set; }   // código al azar del enlace de seguimiento (null en los pedidos anteriores al 5.2)
     public List<PedidoItem> Items { get; set; } = new();
 }
 

@@ -26,7 +26,7 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 
 | Archivo | Para qué sirve |
 |---|---|
-| `Program.cs` | Arranca el servidor y define las direcciones de la API: `GET /api/menu`, `GET /api/franjas` y `POST /api/pedidos`. |
+| `Program.cs` | Arranca el servidor y define las direcciones de la API: `GET /api/menu`, `GET /api/franjas`, `POST /api/pedidos` y `GET /api/seguimiento/{codigo}`. |
 | `Data/CraveDb.cs` | Conecta C# con las tablas de Supabase (categorias, productos, zonas, pedidos, pedido_items). |
 | `Services/PedidoService.cs` | Valida el pedido y calcula subtotal, envío, total y vuelto. |
 | `Services/HorarioService.cs` | Horarios de entrega con cupo. Junta los datos de la base; la cuenta está en `GeneradorFranjas.cs`. |
@@ -42,6 +42,10 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `sql/02-menu-real.sql` | Carga la carta real (categorías, productos, fotos) y las columnas de gaseosas a elección. No toca los pedidos. |
 | `sql/05-pago-transferencia.sql` | Agrega `pedidos.pago_confirmado_en` y `configuracion.minutos_pago_demorado`. Correrlo ANTES de subir el código de la confirmación de pago. |
 | `Models/EstadoPago.cs` | Estados de pago de un pedido (pendiente, demorado, confirmado...) y las reglas para confirmarlo. |
+| `sql/06-seguimiento.sql` | Agrega `pedidos.codigo_seguimiento` (con índice único). Correrlo ANTES de subir el código del seguimiento. |
+| `Services/SeguimientoReglas.cs` | Crea el código de seguimiento al azar y revisa los que llegan de afuera. |
+| `Services/SeguimientoService.cs` | Busca un pedido por su código y devuelve solo lo que puede ver el cliente (`Models/Seguimiento.cs`). |
+| `wwwroot/seguimiento.html`, `css/seguimiento.css`, `js/seguimiento.js` | La página donde el cliente sigue su pedido. |
 | `wwwroot/img/productos/` | Fotos de los productos. |
 
 ## Cómo se conecta todo
@@ -155,6 +159,18 @@ Para que funcione hay que correr una vez `sql/05-pago-transferencia.sql` en Supa
 - El botón "Sin pago (N)" de la lista de pedidos junta todas las transferencias sin confirmar, incluso las ya entregadas.
 - Los pedidos que ya estaban en la base antes de este cambio quedan "sin confirmar". Se borran con el `truncate` previo al lanzamiento.
 - Endpoint: `PATCH /api/admin/pedidos/{id}/pago` con `{ "confirmado": true }` (o `false` para deshacer).
+
+## Seguimiento del pedido para el cliente
+
+Al confirmar un pedido, el cliente recibe un enlace `/seguimiento.html?c=CODIGO` (botón "Seguir mi pedido" y línea "Seguí tu pedido" en el mensaje de WhatsApp). La página muestra en qué paso está su pedido (recibido, preparando, listo, entregado, o cancelado) y se actualiza sola cada 15 segundos hasta que se entrega o se cancela.
+Para que funcione hay que correr una vez `sql/06-seguimiento.sql` en Supabase, ANTES de subir el código.
+
+- **Por qué un código y no el número CR-1001:** el número es correlativo, así que cualquiera podría probar CR-1002, CR-1003... y mirar pedidos ajenos. El código tiene 12 letras y números al azar (`SeguimientoReglas.NuevoCodigo`, con `RandomNumberGenerator`, el azar de seguridad de .NET): más de 7 x 10^17 combinaciones. Sin el enlace no hay forma práctica de llegar al pedido.
+- **Qué devuelve `GET /api/seguimiento/{codigo}`:** número, estado, horario, delivery o retiro, medio de pago, si la transferencia está confirmada y el total. Nunca nombre, teléfono, dirección, referencias ni aclaraciones (clase `SeguimientoPedido`).
+- Un código mal escrito o inexistente responde siempre 404 igual. Límite: 30 consultas por minuto por IP (`Limites.PoliticaSeguimiento`); la página consulta 4 por minuto.
+- Si la transferencia no está confirmada, la página le recuerda al cliente que mande el comprobante por el chat de WhatsApp donde envió el pedido. Esto usa lo que se marca en el panel (ver arriba).
+- Los pedidos hechos antes de este cambio no tienen código ni página de seguimiento.
+- La página no tiene botón de WhatsApp propio para no repetir el número en un segundo lugar: el cliente usa el chat donde ya mandó el pedido.
 
 ## Pendiente
 

@@ -232,7 +232,8 @@ public class PedidoService
             Envio = envio,
             Total = total,
             Vuelto = vuelto,
-            Notas = pedido.Notas.Trim() == "" ? null : pedido.Notas.Trim()
+            Notas = pedido.Notas.Trim() == "" ? null : pedido.Notas.Trim(),
+            CodigoSeguimiento = SeguimientoReglas.NuevoCodigo()   // con este código el cliente sigue su pedido
         };
 
         foreach (var item in pedido.Items)
@@ -271,6 +272,7 @@ public class PedidoService
         return new PedidoCreado
         {
             Numero = nuevo.Numero,
+            Codigo = nuevo.CodigoSeguimiento ?? "",
             Fecha = ahora,
             Nombre = nuevo.Nombre,
             Telefono = nuevo.Telefono,
