@@ -107,6 +107,9 @@ public static class AdminEndpoints
 
         // La página lo usa para saber si ya hay sesión iniciada: 200 si sí, 401 si no.
         admin.MapGet("/yo", () => Results.Ok(new { autenticado = true }));
+
+        // Pedidos y productos (ver AdminPanelEndpoints.cs). Quedan dentro del grupo, o sea protegidos.
+        admin.MapearPanel();
     }
 
     static async Task<IResult> Login(LoginAdmin datos, HttpContext http, IConfiguration configuracion, ILoggerFactory fabricaLogs)

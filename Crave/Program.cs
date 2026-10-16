@@ -18,6 +18,7 @@ if (string.IsNullOrWhiteSpace(cadena))
 builder.Services.AddDbContext<CraveDb>(opciones => opciones.UseNpgsql(cadena));
 builder.Services.AddScoped<HorarioService>();   // se crea uno nuevo por cada pedido que llega
 builder.Services.AddScoped<PedidoService>();
+builder.Services.AddScoped<IAdminService, AdminService>();   // lo que usa el panel de administración
 
 // Las claves de la cookie de sesión se guardan en la tabla claves_sesion (ver sql/03-claves-sesion.sql).
 builder.Services.AddDataProtection()

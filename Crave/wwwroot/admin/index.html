@@ -10,23 +10,52 @@
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-  <main class="caja">
-    <h1>CRAVE <span>panel</span></h1>
 
-    <!-- Pantalla 1: pedir la contraseña -->
-    <form id="form-login" hidden>
-      <label for="password">Contraseña</label>
-      <input id="password" type="password" autocomplete="current-password" maxlength="200" required>
-      <p class="error" id="error" role="alert"></p>
-      <button type="submit" id="boton-entrar">Entrar</button>
-    </form>
-
-    <!-- Pantalla 2: sesión iniciada (por ahora solo un aviso; en los próximos pasos acá van los pedidos) -->
-    <section id="panel" hidden>
-      <p>Sesión iniciada. Acá van a aparecer los pedidos del día.</p>
-      <button type="button" id="boton-salir" class="secundario">Salir</button>
-    </section>
+  <!-- PANTALLA 1: pedir la contraseña -->
+  <main class="centrado" id="vista-login" hidden>
+    <div class="caja">
+      <h1>CRAVE <span>panel</span></h1>
+      <form id="form-login">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" autocomplete="current-password" maxlength="200" required>
+        <p class="error" id="error" role="alert"></p>
+        <button type="submit" id="boton-entrar" class="btn">Entrar</button>
+      </form>
+    </div>
   </main>
+
+  <!-- PANTALLA 2: el panel (se llena desde admin.js) -->
+  <div id="panel" hidden>
+    <header class="barra">
+      <h1>CRAVE <span>panel</span></h1>
+      <nav class="pestanas" aria-label="Secciones">
+        <button type="button" class="pestana" data-accion="vista" data-vista="pedidos" aria-pressed="true">Pedidos <span class="globo" id="globo-nuevos" hidden></span></button>
+        <button type="button" class="pestana" data-accion="vista" data-vista="productos" aria-pressed="false">Productos</button>
+      </nav>
+      <div class="herramientas">
+        <span class="estado-conexion" id="estado-conexion" role="status"></span>
+        <button type="button" class="btn-chico" data-accion="actualizar">Actualizar</button>
+        <button type="button" class="btn-chico" id="boton-sonido" data-accion="sonido" aria-pressed="false">Sonido: no</button>
+        <button type="button" class="btn-chico" id="boton-salir" data-accion="salir">Salir</button>
+      </div>
+    </header>
+
+    <main class="contenido">
+      <p class="aviso" id="aviso" role="status" hidden></p>
+
+      <section id="vista-pedidos">
+        <div class="resumen" id="resumen"></div>
+        <div class="filtros" id="filtros"></div>
+        <div class="pedidos" id="lista-pedidos"></div>
+      </section>
+
+      <section id="vista-productos" hidden>
+        <p class="ayuda">Marcá "Agotado" y el producto deja de poder pedirse. Si es una gaseosa, tampoco se ofrece en los combos. Los clientes lo ven al recargar la carta.</p>
+        <div id="lista-productos"></div>
+      </section>
+    </main>
+  </div>
+
   <script src="admin.js"></script>
 </body>
 </html>

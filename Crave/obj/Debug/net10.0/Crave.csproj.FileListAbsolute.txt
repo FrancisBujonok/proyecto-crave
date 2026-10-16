@@ -77,6 +77,6 @@ C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compresse
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\g3ndkas6pk-{0}-6rtt8ctkwf-6rtt8ctkwf.gz
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.csproj.Up2Date
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.dll
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\ggma1st5uu-{0}-d6easjye8z-d6easjye8z.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\4trqilcl7m-{0}-otmasl67q7-otmasl67q7.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\9uakrvjgct-{0}-yz9d8d536o-yz9d8d536o.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\ggma1st5uu-{0}-y0ut4fw30t-y0ut4fw30t.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\4trqilcl7m-{0}-t37ghwsshn-t37ghwsshn.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\9uakrvjgct-{0}-14mnt8lx3w-14mnt8lx3w.gz

@@ -72,11 +72,22 @@ Algunos productos (Familiar para 4, 5 y 6 y el menú niños) llevan gaseosas a e
 Las opciones son los productos de la categoría `bebidas`: si marcás una como agotada, deja de ofrecerse en todos los combos.
 El cliente las elige en una ventana al tocar "+", y quedan guardadas en `pedido_items.detalle` (ejemplo: "2 × Coca-Cola, 1 × Sprite").
 
+## Panel de administración (/admin)
+
+Es la pantalla del local: pedidos de hoy (se actualiza sola cada 15 segundos), cambio de estado y productos agotados.
+
+1. En Supabase, correr `sql/03-claves-sesion.sql` (una sola vez). Guarda las claves de la sesión para que un deploy no la cierre.
+2. Contraseña en tu PC: `dotnet user-secrets set "Admin:Password" "tu-contraseña-larga"` (10 caracteres o más).
+3. Contraseña en Render: variable de entorno `Admin__Password` (con doble guion bajo).
+4. Entrar a `/admin`. Hay 5 intentos de contraseña cada 10 minutos por IP.
+
+Estados de un pedido: nuevo -> preparando -> listo -> entregado. Cancelar libera el lugar del horario. Un cancelado no se puede reactivar.
+Todo lo que está bajo `/api/admin` exige la sesión iniciada (código en `Endpoints/AdminEndpoints.cs` y `Endpoints/AdminPanelEndpoints.cs`).
+
 ## Pendiente
 
-- Panel del local para ver pedidos y cambiar su estado.
+- Interruptor "local cerrado" y horarios/cupo editables desde el panel.
 - Precios reales (hoy son provisorios).
 - Fotos que faltan: alitas, Familiar para 6 y tacos. Copiarlas en `wwwroot/img/productos/` y completar la columna `imagen` de `productos` (ejemplo: `img/productos/alitas.jpg`).
-- Borrar `Data/MenuData.cs`: ya no se usa porque la carta vive en la base.
 - Ajustar con el local el cupo por horario y el horario de atención.
 - Número de WhatsApp, alias y titular reales: se cambian en `CONFIG` dentro de `wwwroot/js/app.js`.
