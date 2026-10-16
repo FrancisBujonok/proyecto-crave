@@ -17,6 +17,24 @@ public static class AdminPanelEndpoints
         admin.MapPatch("/pedidos/{id:long}/estado", async (long id, CambioEstado cambio, IAdminService servicio) =>
             Responder(await servicio.CambiarEstado(id, cambio.Estado)));
 
+        // Configuración del local: abierto/cerrado, horarios, cupo y tiempo de preparación
+        admin.MapGet("/configuracion", async (IConfigService config) =>
+            Results.Ok(await config.Obtener()));
+
+        // Guardar el formulario de horarios. Si algo está mal responde 400 con la lista de errores.
+        admin.MapPut("/configuracion", async (CambioConfig cambio, IConfigService config) =>
+        {
+            var errores = await config.Guardar(cambio);
+            return errores.Count > 0 ? Results.BadRequest(new { errores }) : Results.Ok(new { ok = true });
+        });
+
+        // Abrir o cerrar el local. Body: { "abierto": false }
+        admin.MapPatch("/configuracion/abierto", async (CambioAbierto cambio, IConfigService config) =>
+        {
+            await config.CambiarAbierto(cambio.Abierto);
+            return Results.Ok(new { ok = true });
+        });
+
         // Lista de productos para marcar agotados
         admin.MapGet("/productos", async (IAdminService servicio) =>
             Results.Ok(await servicio.Productos()));

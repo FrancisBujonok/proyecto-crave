@@ -104,6 +104,7 @@ public class PedidoService
         var productos = await BuscarProductos(pedido);
         var gaseosas = await BuscarGaseosas();
         var zona = await BuscarZona(pedido);
+        bool abierto = await _horarios.LocalAbierto();
 
         if (pedido.Nombre.Trim().Length < 3)
             errores.Add("Escribí tu nombre y apellido.");
@@ -157,8 +158,10 @@ public class PedidoService
                 errores.Add("Elegí la zona de entrega.");
         }
 
-        // El horario tiene que existir hoy y tener lugar.
-        if (pedido.Hora.Trim() == "")
+        // Con el local cerrado no se acepta nada. Si no, el horario tiene que existir hoy y tener lugar.
+        if (!abierto)
+            errores.Add("El local está cerrado por el momento. Probá más tarde.");
+        else if (pedido.Hora.Trim() == "")
             errores.Add("Elegí en qué horario lo querés.");
         else if (await _horarios.LugaresLibres(pedido.Hora) <= 0)
             errores.Add("Ese horario ya no está disponible. Elegí otro.");

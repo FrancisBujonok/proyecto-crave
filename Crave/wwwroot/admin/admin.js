@@ -19,7 +19,8 @@ const $ = (id) => document.getElementById(id);
 // ---------- Estado de la pantalla ----------
 let pedidos = [];
 let productos = [];
-let vista = "pedidos";        // "pedidos" o "productos"
+let config = null;            // configuración del local (abierto/cerrado, horarios, cupo...)
+let vista = "pedidos";        // "pedidos", "productos" o "config"
 let filtro = "activos";       // "activos", "entregado", "cancelado" o "todos"
 let cancelando = null;        // id del pedido que espera el segundo toque para cancelarse
 let ocupado = false;          // true mientras se manda un cambio al servidor (evita dobles toques)
@@ -136,7 +137,9 @@ $("form-login").addEventListener("submit", async (evento) => {
 async function refrescar() {
   if (document.hidden) return;   // con la pestaña en segundo plano no gastamos datos
   try {
-    if (vista === "pedidos") await cargarPedidos(); else await cargarProductos();
+    if (vista === "pedidos") await cargarPedidos();
+    else if (vista === "productos") await cargarProductos();
+    await cargarConfig(vista === "config" && !formularioConfigLleno);   // el estado del local se ve en todas las pestañas
     $("estado-conexion").textContent = "Actualizado " + new Date().toLocaleTimeString("es-AR", { timeZone: ZONA_HORARIA });
     $("estado-conexion").classList.remove("mal");
   } catch (error) {
@@ -159,6 +162,16 @@ async function cargarProductos() {
   if (!ok) throw new Error("fallo");
   productos = datos;
   dibujarProductos();
+}
+
+// Trae la configuración. Siempre actualiza el cartel de abierto/cerrado.
+// El formulario solo se llena cuando se pide (al entrar a la pestaña o al guardar), para no pisar lo que se está escribiendo.
+async function cargarConfig(llenarFormulario = false) {
+  const { ok, datos } = await api("/configuracion");
+  if (!ok) throw new Error("fallo");
+  config = datos;
+  dibujarEstadoLocal();
+  if (llenarFormulario) llenarFormularioConfig();
 }
 
 // Si llegó un pedido nuevo desde la última carga, suena. La primera carga no suena.
@@ -312,6 +325,60 @@ function botonesPedido(p) {
   return botones.length ? '<div class="acciones">' + botones.join("") + '</div>' : '';
 }
 
+// ---------- Estado del local y formulario de horarios ----------
+
+let formularioConfigLleno = false;   // true una vez que el formulario ya tiene los valores del servidor
+
+function dibujarEstadoLocal() {
+  const caja = $("estado-local");
+  caja.hidden = config === null;
+  if (config === null) return;
+  const abierto = config.localAbierto;
+  caja.classList.toggle("cerrado", !abierto);
+  caja.innerHTML =
+    '<div><b>' + (abierto ? 'Local abierto' : 'Local cerrado') + '</b>' +
+    '<span>' + (abierto ? 'Los clientes pueden hacer pedidos.' : 'Los clientes no pueden hacer pedidos.') + '</span></div>' +
+    '<button type="button" class="btn-chico" data-accion="local" data-abierto="' + (!abierto) + '">' + (abierto ? 'Cerrar local' : 'Abrir local') + '</button>';
+}
+
+function llenarFormularioConfig() {
+  $("c-apertura").value = config.apertura;
+  $("c-ultima").value = config.ultimaFranja;
+  $("c-preparacion").value = config.minutosPreparacion;
+  $("c-paso").value = config.minutosPorFranja;
+  $("c-cupo").value = config.pedidosPorFranja;
+  $("c-mensaje").value = config.mensajeCerrado || "";
+  formularioConfigLleno = true;
+}
+
+$("form-config").addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  $("config-errores").innerHTML = "";
+  $("config-ok").textContent = "";
+  $("boton-config").disabled = true;
+  try {
+    const { ok, datos } = await api("/configuracion", "PUT", {
+      apertura: $("c-apertura").value,
+      ultimaFranja: $("c-ultima").value,
+      minutosPreparacion: Number($("c-preparacion").value),
+      minutosPorFranja: Number($("c-paso").value),
+      pedidosPorFranja: Number($("c-cupo").value),
+      mensajeCerrado: $("c-mensaje").value
+    });
+    if (ok) {
+      await cargarConfig(true);   // volvemos a leer lo guardado para mostrar lo que quedó de verdad
+      $("config-ok").textContent = "Guardado. Rige desde el próximo pedido.";
+    } else {
+      const lista = (datos && datos.errores) || ["No se pudo guardar. Probá de nuevo."];
+      $("config-errores").innerHTML = lista.map(e => "<li>" + esc(e) + "</li>").join("");
+    }
+  } catch (error) {
+    if (error.message !== "sin-sesion") $("config-errores").innerHTML = "<li>No hay conexión. Probá de nuevo.</li>";
+  } finally {
+    $("boton-config").disabled = false;
+  }
+});
+
 // ---------- Dibujar productos ----------
 
 function dibujarProductos() {
@@ -343,6 +410,12 @@ async function cambiarEstado(id, estado) {
   await cargarPedidos();   // siempre recargamos para mostrar lo que realmente quedó en la base
 }
 
+async function cambiarAbierto(abierto) {
+  const { ok, datos } = await api("/configuracion/abierto", "PATCH", { abierto });
+  if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar el estado del local.");
+  await cargarConfig(false);
+}
+
 async function cambiarAgotado(id, agotado) {
   const { ok, datos } = await api("/productos/" + encodeURIComponent(id) + "/agotado", "PATCH", { agotado });
   if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar el producto.");
@@ -353,6 +426,8 @@ function cambiarVista(nueva) {
   vista = nueva;
   $("vista-pedidos").hidden = vista !== "pedidos";
   $("vista-productos").hidden = vista !== "productos";
+  $("vista-config").hidden = vista !== "config";
+  if (vista === "config") { formularioConfigLleno = false; $("config-ok").textContent = ""; $("config-errores").innerHTML = ""; }
   document.querySelectorAll('[data-accion="vista"]').forEach(boton =>
     boton.setAttribute("aria-pressed", boton.dataset.vista === vista ? "true" : "false"));
   refrescar();
@@ -396,6 +471,10 @@ $("panel").addEventListener("click", async (evento) => {
       ocupado = true;
       mostrarAviso("");
       await cambiarEstado(Number(boton.dataset.id), boton.dataset.estado);
+    } else if (accion === "local") {
+      ocupado = true;
+      mostrarAviso("");
+      await cambiarAbierto(boton.dataset.abierto === "true");
     } else if (accion === "agotado") {
       ocupado = true;
       mostrarAviso("");

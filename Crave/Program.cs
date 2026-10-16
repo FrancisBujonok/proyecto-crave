@@ -16,6 +16,7 @@ if (string.IsNullOrWhiteSpace(cadena))
 }
 
 builder.Services.AddDbContext<CraveDb>(opciones => opciones.UseNpgsql(cadena));
+builder.Services.AddScoped<IConfigService, ConfigService>();   // configuración del local (horarios, cupo, abierto/cerrado)
 builder.Services.AddScoped<HorarioService>();   // se crea uno nuevo por cada pedido que llega
 builder.Services.AddScoped<PedidoService>();
 builder.Services.AddScoped<IAdminService, AdminService>();   // lo que usa el panel de administración
@@ -48,8 +49,9 @@ app.MapGet("/api/menu", async (CraveDb db) =>
 // Los horarios disponibles de hoy, con cuántos lugares quedan en cada uno.
 app.MapGet("/api/franjas", async (HorarioService horarios) => new
 {
+    cerrado = !await horarios.LocalAbierto(),   // true cuando el dueño cerró el local desde el panel
     franjas = await horarios.ObtenerFranjas(),
-    aviso = HorarioService.MensajeSinFranjas()
+    aviso = await horarios.MensajeSinFranjas()
 });
 
 // La página manda el pedido acá. C# convierte el JSON recibido en un objeto PedidoNuevo.

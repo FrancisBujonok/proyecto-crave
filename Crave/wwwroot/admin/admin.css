@@ -23,8 +23,8 @@ input { width: 100%; padding: 14px; font: inherit; color: var(--texto); backgrou
 
 /* ---------- Barra de arriba ---------- */
 .barra { position: sticky; top: 0; z-index: 5; display: grid; gap: 10px; padding: 12px 16px; background: var(--fondo); border-bottom: 1.5px solid var(--linea); }
-.pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pestana { min-height: 44px; padding: 8px; font-weight: 900; text-transform: uppercase; color: var(--texto); background: var(--tarjeta); border: 1.5px solid var(--linea); border-radius: 12px; }
+.pestanas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pestana { min-height: 44px; padding: 8px 4px; font-size: .8125rem; font-weight: 900; text-transform: uppercase; color: var(--texto); background: var(--tarjeta); border: 1.5px solid var(--linea); border-radius: 12px; }
 .pestana[aria-pressed="true"] { background: var(--rojo); border-color: var(--rojo); }
 .globo { display: inline-block; min-width: 1.5em; padding: 0 6px; margin-left: 4px; font-size: .8125rem; color: var(--rojo); background: #fff; border-radius: 999px; }
 .herramientas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -79,6 +79,21 @@ input { width: 100%; padding: 14px; font: inherit; color: var(--texto); backgrou
 .btn-estado.secundario { min-height: 40px; font-size: .8125rem; color: var(--texto); background: transparent; border: 1.5px solid var(--linea); }
 .btn-estado.peligro { background: #7a1515; }
 
+/* ---------- Estado del local (abierto / cerrado) ---------- */
+.estado-local { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--tarjeta); border: 1.5px solid var(--c-listo); border-radius: 14px; }
+.estado-local.cerrado { border-color: var(--rojo); background: #2a0f0f; }
+.estado-local b { display: block; font-size: .9375rem; text-transform: uppercase; }
+.estado-local span { font-size: .8125rem; color: var(--apagado); }
+.estado-local .btn-chico { min-height: 44px; font-weight: 900; text-transform: uppercase; }
+
+/* ---------- Formulario de horarios ---------- */
+.form-config { display: grid; gap: 14px; max-width: 520px; }
+.campo { display: grid; gap: 4px; }
+.campo small { color: var(--apagado); font-size: .75rem; }
+.errores-config { list-style: none; padding: 0; display: grid; gap: 4px; color: #ff6b6b; font-size: .875rem; font-weight: 600; }
+.errores-config:empty { display: none; }
+.ok-config { min-height: 1.25em; color: var(--c-listo); font-weight: 700; font-size: .875rem; }
+
 /* ---------- Productos ---------- */
 .grupo { margin-bottom: 18px; }
 .grupo h2 { font-size: .875rem; font-weight: 900; text-transform: uppercase; color: var(--apagado); margin-bottom: 6px; }
@@ -91,7 +106,8 @@ input { width: 100%; padding: 14px; font: inherit; color: var(--texto); backgrou
 
 /* ---------- Pantallas grandes ---------- */
 @media (min-width: 720px) {
-  .barra { grid-template-columns: auto 280px 1fr; align-items: center; }
+  .barra { grid-template-columns: auto 380px 1fr; align-items: center; }
+  .pestana { font-size: .9375rem; }
   .herramientas { justify-content: flex-end; }
   .estado-conexion { flex: 0 1 auto; margin-right: auto; }
   .pedidos { grid-template-columns: repeat(2, 1fr); }

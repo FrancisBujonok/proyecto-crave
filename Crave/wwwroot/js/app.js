@@ -32,6 +32,7 @@ let siguienteUid = 1;    // numerador para identificar cada renglón de "combos"
 let selector = null;     // lo que se está eligiendo en la ventana de gaseosas: { id, uid, origen, cantidades }
 let franjas = [];        // horarios de hoy: [{ hora: "21:15", libres: 3 }, ...]
 let franjasError = "";  // texto para mostrar si no hay horarios o no se pudieron cargar
+let localCerrado = false;  // true cuando el dueño cerró el local desde el panel
 let quienAbrio = null;   // botón que abrió el cajón, para devolverle el foco al cerrar
 
 // ---------- 3. AYUDANTES ----------
@@ -198,13 +199,14 @@ function franjasDeEjemplo() {
 }
 
 async function cargarFranjas() {
-  if (MODO_DEMO) { franjas = franjasDeEjemplo(); franjasError = ""; return; }
+  if (MODO_DEMO) { franjas = franjasDeEjemplo(); franjasError = ""; localCerrado = false; return; }
   try {
     const respuesta = await fetch("/api/franjas");
     if (!respuesta.ok) throw new Error("franjas");
     const datos = await respuesta.json();
     franjas = datos.franjas;
     franjasError = datos.aviso;          // el servidor manda un texto para usar si no queda ningún lugar
+    localCerrado = datos.cerrado === true;
   } catch (e) {
     franjas = [];
     franjasError = "No pudimos cargar los horarios.";
@@ -242,6 +244,11 @@ function dibujarFranjas() {
       + (completa ? " disabled" : "") + (f.hora === elegido ? " checked" : "") + ">"
       + "<b>" + f.hora + "</b><small>" + textoCupo(f.libres) + "</small></label>";
   }).join("");
+
+  // Cartel de "local cerrado" arriba de todo, para que el cliente no arme el pedido en vano
+  const banner = $("#banner-cerrado");
+  banner.hidden = !localCerrado;
+  banner.textContent = localCerrado ? franjasError : "";
 
   const aviso = $("#aviso-franjas");
   aviso.hidden = hayHorario();

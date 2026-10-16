@@ -430,6 +430,7 @@ input:hover, select:hover, textarea:hover { border-color: var(--linea-fuerte); }
 .franja.completa { cursor: not-allowed; opacity: .45; }
 .franja.completa b { text-decoration: line-through; }
 .franja.completa:hover { border-color: var(--linea); }
+.banner-cerrado { margin: 12px 0; padding: 12px 14px; border: 1.5px solid var(--rojo); border-radius: 14px; background: rgba(214, 40, 40, .12); font-weight: 700; font-size: .9375rem; }
 .aviso-franjas { padding: 12px 14px; border: 1.5px solid var(--linea); border-radius: 14px; color: var(--apagado); font-size: .9375rem; }
 .aviso-franjas button { margin-top: 8px; }
 @media (min-width: 420px) { .franjas { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

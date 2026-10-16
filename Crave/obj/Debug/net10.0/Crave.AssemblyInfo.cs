@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Crave")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e13f02810431af7727996d781a46fbc9b58a4c7b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+051a0223d92663725b1aeb6014eab476c4fe65a4")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crave")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crave")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

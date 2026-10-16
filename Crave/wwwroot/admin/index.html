@@ -31,6 +31,7 @@
       <nav class="pestanas" aria-label="Secciones">
         <button type="button" class="pestana" data-accion="vista" data-vista="pedidos" aria-pressed="true">Pedidos <span class="globo" id="globo-nuevos" hidden></span></button>
         <button type="button" class="pestana" data-accion="vista" data-vista="productos" aria-pressed="false">Productos</button>
+        <button type="button" class="pestana" data-accion="vista" data-vista="config" aria-pressed="false">Horarios</button>
       </nav>
       <div class="herramientas">
         <span class="estado-conexion" id="estado-conexion" role="status"></span>
@@ -43,6 +44,9 @@
     <main class="contenido">
       <p class="aviso" id="aviso" role="status" hidden></p>
 
+      <!-- Estado del local: se ve siempre, en todas las pestañas -->
+      <div class="estado-local" id="estado-local" hidden></div>
+
       <section id="vista-pedidos">
         <div class="resumen" id="resumen"></div>
         <div class="filtros" id="filtros"></div>
@@ -52,6 +56,47 @@
       <section id="vista-productos" hidden>
         <p class="ayuda">Marcá "Agotado" y el producto deja de poder pedirse. Si es una gaseosa, tampoco se ofrece en los combos. Los clientes lo ven al recargar la carta.</p>
         <div id="lista-productos"></div>
+      </section>
+
+      <section id="vista-config" hidden>
+        <form id="form-config" class="form-config" novalidate>
+          <p class="ayuda">Estos valores controlan qué horarios ve el cliente al pedir. Los cambios rigen desde el próximo pedido.</p>
+
+          <div class="campo">
+            <label for="c-apertura">Primer horario del día</label>
+            <input id="c-apertura" type="time" required>
+            <small>A partir de esta hora se ofrecen entregas.</small>
+          </div>
+          <div class="campo">
+            <label for="c-ultima">Último horario del día</label>
+            <input id="c-ultima" type="time" required>
+            <small>Después de esta hora ya no se ofrecen entregas.</small>
+          </div>
+          <div class="campo">
+            <label for="c-preparacion">Minutos de preparación</label>
+            <input id="c-preparacion" type="number" inputmode="numeric" min="0" max="240" step="1" required>
+            <small>El primer horario disponible es "ahora" más estos minutos.</small>
+          </div>
+          <div class="campo">
+            <label for="c-paso">Minutos entre horarios</label>
+            <input id="c-paso" type="number" inputmode="numeric" min="5" max="120" step="1" required>
+            <small>Ejemplo: 15 da horarios a las 21:00, 21:15, 21:30...</small>
+          </div>
+          <div class="campo">
+            <label for="c-cupo">Pedidos por horario</label>
+            <input id="c-cupo" type="number" inputmode="numeric" min="1" max="50" step="1" required>
+            <small>Cuántos pedidos aguanta la cocina en cada horario. Al llenarse, el cliente elige otro.</small>
+          </div>
+          <div class="campo">
+            <label for="c-mensaje">Mensaje cuando el local está cerrado</label>
+            <input id="c-mensaje" type="text" maxlength="200" placeholder="Ejemplo: Hoy descansamos, volvemos mañana desde las 20:00">
+            <small>Lo ven los clientes si cerrás el local. Si lo dejás vacío se usa un texto estándar.</small>
+          </div>
+
+          <ul class="errores-config" id="config-errores" role="alert"></ul>
+          <button type="submit" class="btn-estado" id="boton-config">Guardar cambios</button>
+          <p class="ok-config" id="config-ok" role="status"></p>
+        </form>
       </section>
     </main>
   </div>
