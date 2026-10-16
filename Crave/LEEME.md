@@ -40,6 +40,8 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `wwwroot/js/app.js` | Carrito, formulario y animaciones. Habla con la API. |
 | `wwwroot/js/menu-demo.js` | Carta de ejemplo, solo para ver la página sin servidor (`MODO_DEMO = true` en `app.js`). |
 | `sql/02-menu-real.sql` | Carga la carta real (categorías, productos, fotos) y las columnas de gaseosas a elección. No toca los pedidos. |
+| `sql/05-pago-transferencia.sql` | Agrega `pedidos.pago_confirmado_en` y `configuracion.minutos_pago_demorado`. Correrlo ANTES de subir el código de la confirmación de pago. |
+| `Models/EstadoPago.cs` | Estados de pago de un pedido (pendiente, demorado, confirmado...) y las reglas para confirmarlo. |
 | `wwwroot/img/productos/` | Fotos de los productos. |
 
 ## Cómo se conecta todo
@@ -131,6 +133,28 @@ Es la pantalla del local: pedidos de hoy (se actualiza sola cada 15 segundos), c
 
 Estados de un pedido: nuevo -> preparando -> listo -> entregado. Cancelar libera el lugar del horario. Un cancelado no se puede reactivar.
 Todo lo que está bajo `/api/admin` exige la sesión iniciada (código en `Endpoints/AdminEndpoints.cs` y `Endpoints/AdminPanelEndpoints.cs`).
+
+## Confirmación de pago por transferencia
+
+Un pedido por transferencia no está pago hasta que el dueño mira su cuenta y toca "Transferencia recibida". Es la defensa fuerte contra los pedidos falsos: se ve a simple vista cuáles todavía no pagaron.
+Para que funcione hay que correr una vez `sql/05-pago-transferencia.sql` en Supabase, ANTES de subir el código (si no, el panel y la tienda dan error porque buscan columnas que todavía no existen).
+
+| Estado de pago | Cuándo | Cómo se ve en el panel |
+|---|---|---|
+| `efectivo` | El pedido es en efectivo | Gris: "Efectivo: cobra al entregar" (con cuánto abona y el vuelto). |
+| `pendiente` | Transferencia sin confirmar, hace menos de N minutos | Recuadro y borde rojos: "Sin pago confirmado". |
+| `demorado` | Transferencia sin confirmar, hace N minutos o más | Rojo fuerte: "Pago demorado". |
+| `confirmado` | Tocaste "Transferencia recibida" | Verde: "Pago confirmado" con la hora. |
+| `sin_pago` | Transferencia cancelada sin confirmar | Gris: "Cancelado sin pago". |
+
+- N (por defecto 20) se cambia en la pestaña "Horarios", sección "Pagos por transferencia". El pedido nunca se cancela solo: solo se resalta.
+- El estado no se guarda: se calcula con `pedidos.pago_confirmado_en` (vacío = sin confirmar), el medio de pago y la hora del pedido (`Models/EstadoPago.cs`). Por eso un pedido pasa a "demorado" solo, sin ningún proceso en segundo plano.
+- "Empezar a preparar" un pedido sin pago confirmado pide un segundo toque (no lo bloquea: a un cliente conocido se le puede preparar antes).
+- Cancelar un pedido ya pagado avisa que hay que devolver la plata, y la tarjeta cancelada lo recuerda.
+- "Deshacer pago confirmado" corrige un toque equivocado. No se puede cambiar el pago de un pedido cancelado ni de uno en efectivo (el servidor responde 409).
+- El botón "Sin pago (N)" de la lista de pedidos junta todas las transferencias sin confirmar, incluso las ya entregadas.
+- Los pedidos que ya estaban en la base antes de este cambio quedan "sin confirmar". Se borran con el `truncate` previo al lanzamiento.
+- Endpoint: `PATCH /api/admin/pedidos/{id}/pago` con `{ "confirmado": true }` (o `false` para deshacer).
 
 ## Pendiente
 

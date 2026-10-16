@@ -72,11 +72,11 @@ C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Microsoft
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Npgsql.dll
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.csproj.AssemblyReference.cache
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\dh3rerm3l6-{0}-17r2hjon6m-17r2hjon6m.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\sfdfj6cka3-{0}-ws0rxkusbe-ws0rxkusbe.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\g3ndkas6pk-{0}-6rtt8ctkwf-6rtt8ctkwf.gz
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\Crave.csproj.Up2Date
 C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\bin\Debug\net10.0\Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.dll
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\ggma1st5uu-{0}-y0ut4fw30t-y0ut4fw30t.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\4trqilcl7m-{0}-t37ghwsshn-t37ghwsshn.gz
-C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\9uakrvjgct-{0}-14mnt8lx3w-14mnt8lx3w.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\ggma1st5uu-{0}-6qxa2cuikd-6qxa2cuikd.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\4trqilcl7m-{0}-n5dcdxfzkr-n5dcdxfzkr.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\9uakrvjgct-{0}-7skt5w65zi-7skt5w65zi.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\dh3rerm3l6-{0}-kdlua25t9e-kdlua25t9e.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\sfdfj6cka3-{0}-o34tw8jm2e-o34tw8jm2e.gz
+C:\Users\franc\Documents\GitHub\proyecto-crave\Crave\obj\Debug\net10.0\compressed\g3ndkas6pk-{0}-djqy0sni2g-djqy0sni2g.gz

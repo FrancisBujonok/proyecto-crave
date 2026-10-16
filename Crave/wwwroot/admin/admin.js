@@ -14,6 +14,13 @@ const SIGUIENTE = {
 const ANTERIOR = { preparando: "nuevo", listo: "preparando", entregado: "listo" };
 const ESTADOS_ACTIVOS = ["nuevo", "preparando", "listo"];
 
+// true si es una transferencia que todavía no se marcó como recibida. El servidor aclara si está "pendiente"
+// (recién llegó el pedido) o "demorado" (pasaron más minutos que los de la pestaña Horarios).
+// Un pedido cancelado nunca cuenta: el servidor lo marca "sin_pago".
+function sinPagoConfirmado(p) {
+  return p.estadoPago === "pendiente" || p.estadoPago === "demorado";
+}
+
 const $ = (id) => document.getElementById(id);
 
 // ---------- Estado de la pantalla ----------
@@ -21,8 +28,8 @@ let pedidos = [];
 let productos = [];
 let config = null;            // configuración del local (abierto/cerrado, horarios, cupo...)
 let vista = "pedidos";        // "pedidos", "productos" o "config"
-let filtro = "activos";       // "activos", "entregado", "cancelado" o "todos"
-let cancelando = null;        // id del pedido que espera el segundo toque para cancelarse
+let filtro = "activos";       // "activos", "sinpago", "entregado", "cancelado" o "todos"
+let confirmando = null;       // "accion:id" del botón que espera un segundo toque (cancelar, o preparar sin pago confirmado)
 let ocupado = false;          // true mientras se manda un cambio al servidor (evita dobles toques)
 let temporizador = null;
 let idsNuevosVistos = null;   // ids de pedidos "nuevo" ya vistos (null = todavía no cargamos nada)
@@ -245,18 +252,24 @@ function dibujarPedidos() {
     '<div class="dato"><b>' + plata(vendido) + '</b><span>Vendido hoy</span></div>';
 
   const cuenta = (estado) => pedidos.filter(p => p.estado === estado).length;
+  const sinPago = pedidos.filter(sinPagoConfirmado).length;
   const opciones = [
     ["activos", "En curso (" + activos.length + ")"],
+    ["sinpago", "Sin pago (" + sinPago + ")"],
     ["entregado", "Entregados (" + cuenta("entregado") + ")"],
     ["cancelado", "Cancelados (" + cuenta("cancelado") + ")"],
     ["todos", "Todos (" + pedidos.length + ")"]
   ];
   $("filtros").innerHTML = opciones.map(([clave, texto]) =>
-    '<button type="button" class="filtro" data-accion="filtro" data-filtro="' + clave + '" aria-pressed="' + (filtro === clave) + '">' + texto + '</button>'
+    // el botón "Sin pago" se marca en rojo mientras haya transferencias sin confirmar
+    '<button type="button" class="filtro' + (clave === "sinpago" && sinPago > 0 ? ' alerta' : '') + '" data-accion="filtro" data-filtro="' + clave + '" aria-pressed="' + (filtro === clave) + '">' + texto + '</button>'
   ).join("");
 
   const visibles = pedidos.filter(p =>
-    filtro === "todos" ? true : filtro === "activos" ? ESTADOS_ACTIVOS.includes(p.estado) : p.estado === filtro);
+    filtro === "todos" ? true :
+    filtro === "activos" ? ESTADOS_ACTIVOS.includes(p.estado) :
+    filtro === "sinpago" ? sinPagoConfirmado(p) :
+    p.estado === filtro);
 
   $("lista-pedidos").innerHTML = visibles.length === 0
     ? '<p class="vacio">No hay pedidos en esta lista.</p>'
@@ -280,47 +293,88 @@ function tarjetaPedido(p) {
     entrega = '<b>Retiro</b> en el local';
   }
 
-  let pago;
-  if (p.pago === "transferencia") {
-    pago = '<b>Transferencia:</b> confirmar que llegó';
-  } else if (p.abonaCon > 0) {
-    pago = '<b>Efectivo:</b> abona con ' + plata(p.abonaCon) + ', vuelto ' + plata(p.vuelto);
-  } else {
-    pago = '<b>Efectivo</b>';
-  }
-
   const envio = p.envio > 0 ? '<div class="linea">Envío ' + plata(p.envio) + '</div>' : '';
   const nota = p.notas ? '<div class="nota"><b>Nota:</b> ' + esc(p.notas) + '</div>' : '';
 
-  return '<article class="pedido ' + esc(p.estado) + '">' +
+  return '<article class="pedido ' + esc(p.estado) + ' pago-' + esc(p.estadoPago) + '">' +
     '<div class="pedido-cabecera"><span class="hora">' + esc(p.hora) + '</span>' +
     '<span><span class="numero">' + esc(p.numero) + ' · pedido a las ' + horaLocal(p.creadoEn) + '</span> ' +
     '<span class="badge ' + esc(p.estado) + '">' + esc(p.estado) + '</span></span></div>' +
+    bloquePago(p) +
     '<div class="cliente">' + esc(p.nombre) + ' · ' + cliente + '</div>' +
     '<div class="linea">' + entrega + '</div>' +
     '<ul class="items">' + items + '</ul>' +
-    nota +
-    '<div class="linea">' + pago + '</div>' + envio +
+    nota + envio +
     '<div class="total"><span>Total</span><span>' + plata(p.total) + '</span></div>' +
     botonesPedido(p) +
     '</article>';
 }
 
+// "12 min" o "1 h 5 min"
+function duracion(minutos) {
+  if (minutos < 60) return minutos + " min";
+  const resto = minutos % 60;
+  return Math.floor(minutos / 60) + " h" + (resto > 0 ? " " + resto + " min" : "");
+}
+
+// El recuadro de pago de la tarjeta. En una transferencia sin confirmar es lo primero que tiene que saltar a la vista.
+// Los textos salen de acá y de números del servidor (nada que haya escrito un cliente), por eso no pasan por esc().
+function bloquePago(p) {
+  const monto = plata(p.total);
+  let titulo, detalle;
+
+  if (p.estadoPago === "efectivo") {
+    titulo = "Efectivo: cobra al entregar";
+    detalle = p.abonaCon > 0 ? "Abona con " + plata(p.abonaCon) + ", vuelto " + plata(p.vuelto) : "Paga justo";
+  } else if (p.estadoPago === "confirmado") {
+    titulo = "Pago confirmado";
+    detalle = "Transferencia recibida a las " + horaLocal(p.pagoConfirmadoEn);   // la hora ya termina en punto ("p. m.")
+    if (p.estado === "cancelado") detalle += " El pedido está cancelado: hay que devolver la plata.";
+  } else if (p.estadoPago === "demorado") {
+    titulo = "Pago demorado";
+    detalle = "Hace " + duracion(p.minutosEsperandoPago) + " que se espera la transferencia de " + monto + ". Revisá tu cuenta antes de preparar.";
+  } else if (p.estadoPago === "sin_pago") {
+    titulo = "Cancelado sin pago";
+    detalle = "La transferencia nunca se confirmó.";
+  } else {
+    titulo = "Sin pago confirmado";
+    detalle = "Esperando la transferencia de " + monto + " (hace " + duracion(p.minutosEsperandoPago) + ").";
+  }
+
+  return '<div class="pago ' + esc(p.estadoPago) + '"><b>' + titulo + '</b><span>' + detalle + '</span></div>';
+}
+
 function botonesPedido(p) {
   const botones = [];
   const siguiente = SIGUIENTE[p.estado];
+  const sinPago = sinPagoConfirmado(p);
+
+  // Transferencia sin confirmar: este botón va primero, porque lo primero es mirar tu cuenta y ver si llegó la plata
+  if (sinPago) {
+    botones.push('<button type="button" class="btn-estado pago-ok" data-accion="pago" data-id="' + p.id + '" data-confirmado="true">Transferencia recibida</button>');
+  }
 
   if (siguiente) {
-    botones.push('<button type="button" class="btn-estado" data-accion="estado" data-id="' + p.id + '" data-estado="' + siguiente[0] + '">' + siguiente[1] + '</button>');
+    // Empezar a preparar sin el pago confirmado pide un segundo toque. No se bloquea: el que decide sos vos.
+    const esperaPreparar = sinPago && siguiente[0] === "preparando" && confirmando === "preparar:" + p.id;
+    botones.push('<button type="button" class="btn-estado' + (esperaPreparar ? ' peligro' : '') + '" data-accion="estado" data-id="' + p.id + '" data-estado="' + siguiente[0] + '">' +
+      (esperaPreparar ? 'Sin pago confirmado: tocá de nuevo para preparar' : siguiente[1]) + '</button>');
   }
   if (ANTERIOR[p.estado]) {
     botones.push('<button type="button" class="btn-estado secundario" data-accion="estado" data-id="' + p.id + '" data-estado="' + ANTERIOR[p.estado] + '">Volver a ' + ANTERIOR[p.estado] + '</button>');
   }
+  // Por si se tocó "Transferencia recibida" sin querer
+  if (p.estadoPago === "confirmado" && p.estado !== "cancelado") {
+    botones.push('<button type="button" class="btn-estado secundario" data-accion="pago" data-id="' + p.id + '" data-confirmado="false">Deshacer pago confirmado</button>');
+  }
   // Cancelar pide dos toques seguidos para evitar cancelar por error
   if (ESTADOS_ACTIVOS.includes(p.estado)) {
-    const confirmando = cancelando === p.id;
-    botones.push('<button type="button" class="btn-estado secundario' + (confirmando ? ' peligro' : '') + '" data-accion="cancelar" data-id="' + p.id + '">' +
-      (confirmando ? 'Tocá de nuevo para cancelar' : 'Cancelar pedido') + '</button>');
+    const esperaCancelar = confirmando === "cancelar:" + p.id;
+    const avisoCancelar = p.estadoPago === "confirmado"
+      ? 'Ya pagó: tocá de nuevo para cancelar (hay que devolver la plata)'
+      : 'Tocá de nuevo para cancelar';
+    botones.push('<button type="button" class="btn-estado secundario' + (esperaCancelar ? ' peligro' : '') + '" data-accion="cancelar" data-id="' + p.id + '">' +
+      (esperaCancelar ? avisoCancelar : 'Cancelar pedido') + '</button>');
   }
   return botones.length ? '<div class="acciones">' + botones.join("") + '</div>' : '';
 }
@@ -347,6 +401,7 @@ function llenarFormularioConfig() {
   $("c-preparacion").value = config.minutosPreparacion;
   $("c-paso").value = config.minutosPorFranja;
   $("c-cupo").value = config.pedidosPorFranja;
+  $("c-pago").value = config.minutosPagoDemorado;
   $("c-mensaje").value = config.mensajeCerrado || "";
   formularioConfigLleno = true;
 }
@@ -363,6 +418,7 @@ $("form-config").addEventListener("submit", async (evento) => {
       minutosPreparacion: Number($("c-preparacion").value),
       minutosPorFranja: Number($("c-paso").value),
       pedidosPorFranja: Number($("c-cupo").value),
+      minutosPagoDemorado: Number($("c-pago").value),
       mensajeCerrado: $("c-mensaje").value
     });
     if (ok) {
@@ -410,6 +466,27 @@ async function cambiarEstado(id, estado) {
   await cargarPedidos();   // siempre recargamos para mostrar lo que realmente quedó en la base
 }
 
+// Marca (confirmado = true) o desmarca "transferencia recibida"
+async function cambiarPago(id, confirmado) {
+  const { ok, datos } = await api("/pedidos/" + id + "/pago", "PATCH", { confirmado });
+  if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar el pago.");
+  await cargarPedidos();
+}
+
+// Para acciones delicadas: el primer toque cambia el texto del botón y pide tocar de nuevo.
+// Devuelve true si este toque es el segundo (hay que hacer la acción). Si no vuelve a tocar en 4 segundos, se olvida.
+function pedirSegundoToque(accion, id) {
+  const clave = accion + ":" + id;
+  if (confirmando === clave) {
+    confirmando = null;
+    return true;
+  }
+  confirmando = clave;
+  dibujarPedidos();
+  setTimeout(() => { if (confirmando === clave) { confirmando = null; dibujarPedidos(); } }, 4000);
+  return false;
+}
+
 async function cambiarAbierto(abierto) {
   const { ok, datos } = await api("/configuracion/abierto", "PATCH", { abierto });
   if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar el estado del local.");
@@ -455,22 +532,26 @@ $("panel").addEventListener("click", async (evento) => {
       mostrarLogin();
     } else if (accion === "cancelar") {
       const id = Number(boton.dataset.id);
-      if (cancelando !== id) {
-        // primer toque: pedimos confirmación y la borramos a los 4 segundos si no toca de nuevo
-        cancelando = id;
-        dibujarPedidos();
-        setTimeout(() => { if (cancelando === id) { cancelando = null; dibujarPedidos(); } }, 4000);
-      } else {
-        cancelando = null;
+      if (pedirSegundoToque("cancelar", id)) {
         ocupado = true;
         mostrarAviso("");
         await cambiarEstado(id, "cancelado");
       }
     } else if (accion === "estado") {
-      cancelando = null;
+      const id = Number(boton.dataset.id);
+      const nuevo = boton.dataset.estado;
+      const pedido = pedidos.find(p => p.id === id);
+      // Empezar a preparar una transferencia sin pago confirmado: hace falta un segundo toque
+      if (nuevo === "preparando" && pedido && sinPagoConfirmado(pedido) && !pedirSegundoToque("preparar", id)) return;
+      confirmando = null;
       ocupado = true;
       mostrarAviso("");
-      await cambiarEstado(Number(boton.dataset.id), boton.dataset.estado);
+      await cambiarEstado(id, nuevo);
+    } else if (accion === "pago") {
+      confirmando = null;
+      ocupado = true;
+      mostrarAviso("");
+      await cambiarPago(Number(boton.dataset.id), boton.dataset.confirmado === "true");
     } else if (accion === "local") {
       ocupado = true;
       mostrarAviso("");

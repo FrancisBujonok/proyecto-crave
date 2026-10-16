@@ -17,7 +17,11 @@ public static class AdminPanelEndpoints
         admin.MapPatch("/pedidos/{id:long}/estado", async (long id, CambioEstado cambio, IAdminService servicio) =>
             Responder(await servicio.CambiarEstado(id, cambio.Estado)));
 
-        // Configuración del local: abierto/cerrado, horarios, cupo y tiempo de preparación
+        // Marcar o desmarcar "transferencia recibida". Body: { "confirmado": true }
+        admin.MapPatch("/pedidos/{id:long}/pago", async (long id, CambioPago cambio, IAdminService servicio) =>
+            Responder(await servicio.CambiarPago(id, cambio.Confirmado)));
+
+        // Configuración del local: abierto/cerrado, horarios, cupo, tiempo de preparación y minutos de "pago demorado"
         admin.MapGet("/configuracion", async (IConfigService config) =>
             Results.Ok(await config.Obtener()));
 

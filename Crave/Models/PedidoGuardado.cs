@@ -17,6 +17,7 @@ public class Pedido
     public string Direccion { get; set; } = "";
     public string? Referencias { get; set; }
     public string Pago { get; set; } = "";           // "transferencia" o "efectivo"
+    public DateTime? PagoConfirmadoEn { get; set; }  // cuándo el dueño marcó "transferencia recibida" (UTC). null = sin confirmar
     public int AbonaCon { get; set; }
     public int Subtotal { get; set; }
     public int Envio { get; set; }

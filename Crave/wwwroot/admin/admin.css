@@ -79,6 +79,22 @@ input { width: 100%; padding: 14px; font: inherit; color: var(--texto); backgrou
 .btn-estado.secundario { min-height: 40px; font-size: .8125rem; color: var(--texto); background: transparent; border: 1.5px solid var(--linea); }
 .btn-estado.peligro { background: #7a1515; }
 
+/* ---------- Pago de la transferencia ---------- */
+/* Una transferencia sin confirmar se ve desde lejos: borde rojo en toda la tarjeta (menos la franja izquierda, que sigue indicando el estado) */
+.pedido.pago-pendiente, .pedido.pago-demorado { border-top-color: var(--rojo); border-right-color: var(--rojo); border-bottom-color: var(--rojo); }
+.pedido.pago-demorado { box-shadow: 0 0 0 2px var(--rojo); }
+.pago { display: grid; gap: 2px; padding: 8px 10px; font-size: .8125rem; border: 1.5px solid var(--linea); border-radius: 10px; }
+.pago b { font-size: .875rem; text-transform: uppercase; }
+.pago.efectivo, .pago.sin_pago { color: var(--apagado); }
+.pago.efectivo b, .pago.sin_pago b { color: var(--texto); }
+.pago.pendiente { background: #3a1010; border-color: var(--rojo); }
+.pago.demorado { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+.pago.confirmado { background: #0f2a1a; border-color: var(--c-listo); }
+.pago.confirmado b { color: var(--c-listo); }
+.btn-estado.pago-ok { color: #000; background: var(--c-listo); }
+.filtro.alerta { border-color: var(--rojo); color: #ff9b9b; }
+.filtro.alerta[aria-pressed="true"] { color: #fff; background: var(--rojo); border-color: var(--rojo); }
+
 /* ---------- Estado del local (abierto / cerrado) ---------- */
 .estado-local { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--tarjeta); border: 1.5px solid var(--c-listo); border-radius: 14px; }
 .estado-local.cerrado { border-color: var(--rojo); background: #2a0f0f; }
@@ -90,6 +106,7 @@ input { width: 100%; padding: 14px; font: inherit; color: var(--texto); backgrou
 .form-config { display: grid; gap: 14px; max-width: 520px; }
 .campo { display: grid; gap: 4px; }
 .campo small { color: var(--apagado); font-size: .75rem; }
+.subtitulo-config { margin-top: 6px; font-size: .875rem; font-weight: 900; text-transform: uppercase; color: var(--apagado); }
 .errores-config { list-style: none; padding: 0; display: grid; gap: 4px; color: #ff6b6b; font-size: .875rem; font-weight: 600; }
 .errores-config:empty { display: none; }
 .ok-config { min-height: 1.25em; color: var(--c-listo); font-weight: 700; font-size: .875rem; }

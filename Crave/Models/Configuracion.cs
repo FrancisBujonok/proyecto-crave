@@ -12,6 +12,7 @@ public class Configuracion
     public int MinutosPreparacion { get; set; } = 30;    // el primer horario disponible es "ahora + estos minutos"
     public int MinutosPorFranja { get; set; } = 15;      // un horario cada tantos minutos
     public int PedidosPorFranja { get; set; } = 4;       // cuántos pedidos aguanta la cocina por horario
+    public int MinutosPagoDemorado { get; set; } = 20;   // una transferencia sin confirmar pasado este tiempo se marca "Pago demorado" en el panel
 }
 
 // Lo que manda el panel al guardar el formulario de horarios
@@ -21,7 +22,8 @@ public record CambioConfig(
     string? UltimaFranja,
     int MinutosPreparacion,
     int MinutosPorFranja,
-    int PedidosPorFranja);
+    int PedidosPorFranja,
+    int? MinutosPagoDemorado = null);   // si no viene (un panel viejo que quedó abierto), se deja el valor que ya estaba
 
 // Lo que manda el panel al tocar el botón "Abrir local" / "Cerrar local"
 public record CambioAbierto(bool Abierto);

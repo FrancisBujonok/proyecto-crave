@@ -7,6 +7,7 @@ public interface IAdminService
 {
     Task<List<PedidoAdmin>> PedidosDeHoy();
     Task<ResultadoAdmin> CambiarEstado(long id, string? estado);
+    Task<ResultadoAdmin> CambiarPago(long id, bool confirmado);   // marcar o desmarcar "transferencia recibida"
     Task<List<ProductoAdmin>> Productos();
     Task<ResultadoAdmin> CambiarAgotado(string id, bool agotado);
 }

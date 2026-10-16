@@ -6,6 +6,7 @@ namespace Crave.Models;
 // ---------- Lo que manda el panel ----------
 public record CambioEstado(string? Estado);
 public record CambioAgotado(bool Agotado);
+public record CambioPago(bool Confirmado);   // true = "transferencia recibida", false = deshacerlo
 
 // ---------- Lo que se le responde al panel ----------
 public class PedidoAdmin
@@ -20,6 +21,9 @@ public class PedidoAdmin
     public string Direccion { get; set; } = "";
     public string? Referencias { get; set; }
     public string Pago { get; set; } = "";
+    public string EstadoPago { get; set; } = "";             // efectivo, pendiente, demorado, confirmado o sin_pago (ver EstadoPago.cs)
+    public DateTime? PagoConfirmadoEn { get; set; }          // cuándo se marcó "transferencia recibida" (null = sin confirmar)
+    public int MinutosEsperandoPago { get; set; }            // minutos desde que se hizo el pedido (el panel lo muestra mientras no se confirma)
     public int AbonaCon { get; set; }
     public int Subtotal { get; set; }
     public int Envio { get; set; }

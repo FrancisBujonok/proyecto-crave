@@ -31,6 +31,8 @@ public static class ConfigReglas
             errores.Add("Los minutos entre horarios tienen que estar entre 5 y 120.");
         if (cambio.PedidosPorFranja < 1 || cambio.PedidosPorFranja > 50)
             errores.Add("Los pedidos por horario tienen que estar entre 1 y 50.");
+        if (cambio.MinutosPagoDemorado is int minutosPago && (minutosPago < 5 || minutosPago > 240))
+            errores.Add("Los minutos para marcar un pago como demorado tienen que estar entre 5 y 240.");
         if ((cambio.MensajeCerrado ?? "").Trim().Length > 200)
             errores.Add("El mensaje de local cerrado puede tener hasta 200 caracteres.");
 

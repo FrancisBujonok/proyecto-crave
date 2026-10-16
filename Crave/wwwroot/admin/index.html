@@ -87,6 +87,14 @@
             <input id="c-cupo" type="number" inputmode="numeric" min="1" max="50" step="1" required>
             <small>Cuántos pedidos aguanta la cocina en cada horario. Al llenarse, el cliente elige otro.</small>
           </div>
+          <h2 class="subtitulo-config">Pagos por transferencia</h2>
+          <div class="campo">
+            <label for="c-pago">Minutos para marcar un pago como demorado</label>
+            <input id="c-pago" type="number" inputmode="numeric" min="5" max="240" step="1" required>
+            <small>Si una transferencia sigue sin confirmarse pasado este tiempo, el pedido se marca "Pago demorado" en rojo. No se cancela solo: lo decidís vos.</small>
+          </div>
+
+          <h2 class="subtitulo-config">Local cerrado</h2>
           <div class="campo">
             <label for="c-mensaje">Mensaje cuando el local está cerrado</label>
             <input id="c-mensaje" type="text" maxlength="200" placeholder="Ejemplo: Hoy descansamos, volvemos mañana desde las 20:00">

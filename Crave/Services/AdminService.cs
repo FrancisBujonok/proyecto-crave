@@ -9,16 +9,21 @@ namespace Crave.Services;
 public class AdminService : IAdminService
 {
     private readonly CraveDb _db;
+    private readonly IConfigService _configuracion;
 
-    public AdminService(CraveDb db)
+    public AdminService(CraveDb db, IConfigService configuracion)
     {
         _db = db;
+        _configuracion = configuracion;
     }
 
     // Los pedidos del día de hoy (hora de Argentina), ordenados por horario de entrega.
+    // Cada uno trae su estado de pago (pendiente, demorado, confirmado...), calculado con la hora actual del servidor.
     public async Task<List<PedidoAdmin>> PedidosDeHoy()
     {
         var hoy = DateOnly.FromDateTime(HorarioService.Ahora());
+        var config = await _configuracion.Obtener();
+        var ahoraUtc = DateTime.UtcNow;
 
         var pedidos = await _db.Pedidos
             .Include(p => p.Items)
@@ -27,7 +32,7 @@ public class AdminService : IAdminService
             .ThenBy(p => p.Id)
             .ToListAsync();
 
-        return pedidos.Select(ConvertirPedido).ToList();
+        return pedidos.Select(p => ConvertirPedido(p, ahoraUtc, config.MinutosPagoDemorado)).ToList();
     }
 
     // Cambia el estado de un pedido. Cancelar libera el lugar del horario solo,
@@ -46,6 +51,27 @@ public class AdminService : IAdminService
         if (pedido.Estado != nuevo)
         {
             pedido.Estado = nuevo;
+            await _db.SaveChangesAsync();
+        }
+        return ResultadoAdmin.Hecho();
+    }
+
+    // Marca (o desmarca) que la transferencia de un pedido ya llegó. Solo vale para pedidos por transferencia
+    // que no estén cancelados (las reglas están en EstadoPago). Repetir el mismo cambio no hace nada.
+    public async Task<ResultadoAdmin> CambiarPago(long id, bool confirmado)
+    {
+        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.Id == id);
+        if (pedido == null)
+            return ResultadoAdmin.NoExiste("Ese pedido no existe.");
+
+        string? motivo = EstadoPago.MotivoNoPermitido(pedido);
+        if (motivo != null)
+            return ResultadoAdmin.NoPermitido(motivo);
+
+        bool yaEstabaConfirmado = pedido.PagoConfirmadoEn != null;
+        if (yaEstabaConfirmado != confirmado)
+        {
+            pedido.PagoConfirmadoEn = confirmado ? DateTime.UtcNow : null;
             await _db.SaveChangesAsync();
         }
         return ResultadoAdmin.Hecho();
@@ -94,7 +120,7 @@ public class AdminService : IAdminService
     }
 
     // Convierte la fila de la base en lo que se manda al panel
-    static PedidoAdmin ConvertirPedido(Pedido p)
+    static PedidoAdmin ConvertirPedido(Pedido p, DateTime ahoraUtc, int minutosPagoDemorado)
     {
         return new PedidoAdmin
         {
@@ -108,6 +134,9 @@ public class AdminService : IAdminService
             Direccion = p.Direccion,
             Referencias = p.Referencias,
             Pago = p.Pago,
+            EstadoPago = EstadoPago.De(p, ahoraUtc, minutosPagoDemorado),
+            PagoConfirmadoEn = p.PagoConfirmadoEn,
+            MinutosEsperandoPago = EstadoPago.MinutosEsperando(p, ahoraUtc),
             AbonaCon = p.AbonaCon,
             Subtotal = p.Subtotal,
             Envio = p.Envio,

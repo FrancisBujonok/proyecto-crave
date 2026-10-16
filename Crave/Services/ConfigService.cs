@@ -40,6 +40,8 @@ public class ConfigService : IConfigService
         fila.MinutosPreparacion = cambio.MinutosPreparacion;
         fila.MinutosPorFranja = cambio.MinutosPorFranja;
         fila.PedidosPorFranja = cambio.PedidosPorFranja;
+        if (cambio.MinutosPagoDemorado is int minutosPago)   // si no vino, queda el valor anterior
+            fila.MinutosPagoDemorado = minutosPago;
 
         await _db.SaveChangesAsync();
         return errores;   // vacía
