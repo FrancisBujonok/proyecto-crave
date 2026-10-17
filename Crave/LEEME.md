@@ -47,6 +47,9 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `Services/SeguimientoService.cs` | Busca un pedido por su código y devuelve solo lo que puede ver el cliente (`Models/Seguimiento.cs`). |
 | `wwwroot/seguimiento.html`, `css/seguimiento.css`, `js/seguimiento.js` | La página donde el cliente sigue su pedido. |
 | `wwwroot/img/productos/` | Fotos de los productos. |
+| `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (alitas, Familiar para 6, tacos). |
+| `wwwroot/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Ícono de la pestaña, del iPhone y de Android (la "A" roja del logo sobre negro). |
+| `wwwroot/img/og-crave.jpg` | Imagen que se ve al compartir el enlace en WhatsApp, Instagram o Facebook (1200 x 630). |
 
 ## Cómo se conecta todo
 
@@ -172,9 +175,49 @@ Para que funcione hay que correr una vez `sql/06-seguimiento.sql` en Supabase, A
 - Los pedidos hechos antes de este cambio no tienen código ni página de seguimiento.
 - La página no tiene botón de WhatsApp propio para no repetir el número en un segundo lugar: el cliente usa el chat donde ya mandó el pedido.
 
+## Fotos de los productos
+
+Cada producto tiene una columna `imagen` en la tabla `productos` (la ruta del archivo dentro de `wwwroot`). Si está vacía, la tarjeta muestra un dibujo provisorio. Si la ruta existe pero el archivo no carga, también se muestra el dibujo (`app.js`, escuchador de "error"): nunca queda una imagen rota.
+
+Faltan 8 fotos. Las de alitas y la del Familiar para 6 son las que importan ahora; los tacos están como agotados y pueden esperar.
+
+| Producto (id) | Archivo que hay que crear en `wwwroot/img/productos/` |
+|---|---|
+| 6 alitas + papas (`ind-alitas6`) | `alitas-individual.jpg` |
+| Para 2: alitas (`cmp-alitas10`) | `alitas-2-personas.jpg` |
+| Para 3: alitas (`cmp-alitas15`) | `alitas-3-personas.jpg` |
+| Familiar para 6 (`fam-6`) | `familiar-6.jpg` |
+| Taco de pollo crispy (`tac-pollo`) | `taco-pollo.jpg` |
+| Taco de carne (`tac-carne`) | `taco-carne.jpg` |
+| Combo 3 tacos (`tac-combo3`) | `combo-3-tacos.jpg` |
+| Combo 6 tacos (`tac-combo6`) | `combo-6-tacos.jpg` |
+
+Cómo preparar cada foto (para que se vea igual que las 20 que ya están):
+
+- Horizontal, proporción 4:3, de 800 x 600 píxeles. Las que hay hoy miden 800 x 600 (la tarjeta recorta lo que sobre, así que el producto va al centro).
+- Formato JPG y menos de 100 KB. Una foto de celular pesa varios MB y haría lenta la carta. Para achicarla: squoosh.app, arrastrar la foto, "Resize" a ancho 800, formato "MozJPEG", calidad cerca de 75, y bajar el resultado.
+- Mismo estilo que las actuales: fondo oscuro y el producto bien iluminado.
+- Nombre del archivo en minúsculas, sin espacios ni tildes, igual al de la tabla (en el servidor de Render las mayúsculas importan: `Alitas.jpg` no es `alitas.jpg`).
+
+Pasos para cargar una foto:
+
+1. Copiar el archivo en `wwwroot/img/productos/`.
+2. Hacer commit y push (la foto viaja con el código a Render).
+3. Cuando Render termine de publicar, correr en Supabase las líneas de ese producto de `sql/07-fotos-faltantes.sql` (cambia solo la columna `imagen`). Los tacos vienen comentados: sacales los `--` cuando tengas sus fotos.
+4. Recargar la tienda con Ctrl+F5. La consulta del final del SQL muestra qué productos siguen sin foto.
+
+`sql/02-menu-real.sql` reemplaza la carta completa: si lo volvés a correr, las fotos del 07 se pierden y hay que correr el 07 de nuevo.
+
+## Ícono y vista previa al compartir
+
+- **Ícono:** la "A" roja del logo sobre fondo negro. `favicon.ico` y `favicon.svg` son los de la pestaña del navegador (antes `/favicon.ico` daba 404). `apple-touch-icon.png` es el que usa el iPhone al guardar la página en la pantalla de inicio, y `icon-192.png` / `icon-512.png` con `site.webmanifest`, el de Android. Se enlazan desde el `<head>` de la tienda, del seguimiento y del panel.
+- **Vista previa al compartir:** cuando se pega el enlace en WhatsApp, Instagram o Facebook aparece `img/og-crave.jpg` con el título y la descripción que están en las etiquetas `og:` de `index.html`. La página de seguimiento usa la misma imagen.
+- **Dominio propio:** `og:url` y `og:image` de `index.html` (y `og:image` de `seguimiento.html`) llevan la dirección completa `https://cravesunchales.onrender.com`: los servicios que arman la vista previa no aceptan rutas relativas. Cuando tengas dominio, cambiala en esos tres lugares.
+- **La vista previa se guarda en caché:** WhatsApp y Facebook recuerdan la imagen de un enlace durante días. Si compartís el enlace antes de que esté todo listo y después cambiás la imagen, el chat puede seguir mostrando la vieja. Para probar, mandate el enlace a vos mismo; para forzar la actualización en Facebook existe el "Depurador de uso compartido" (developers.facebook.com/tools/debug).
+
 ## Pendiente
 
 - Precios reales (hoy son provisorios).
-- Fotos que faltan: alitas, Familiar para 6 y tacos. Copiarlas en `wwwroot/img/productos/` y completar la columna `imagen` de `productos` (ejemplo: `img/productos/alitas.jpg`).
+- Fotos que faltan: ver la tabla de "Fotos de los productos".
 - Ajustar con el local el cupo por horario y el horario de atención.
 - Número de WhatsApp, alias y titular reales: se cambian en `CONFIG` dentro de `wwwroot/js/app.js`.

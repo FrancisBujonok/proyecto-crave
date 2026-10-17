@@ -129,7 +129,7 @@ function dibujarAntojos() {
 // La tarjeta de un producto. Se usa en los combos y en la carta.
 function tarjetaHTML(p) {
   const arte = p.imagen
-    ? '<img class="foto" src="' + esc(p.imagen) + '" alt="' + esc(p.nombre) + '" width="400" height="300" loading="lazy">'
+    ? '<img class="foto" src="' + esc(p.imagen) + '" data-icono="' + esc(p.icono || "") + '" alt="' + esc(p.nombre) + '" width="400" height="300" loading="lazy">'
     : icono(p.icono);
   const etiqueta = p.etiqueta ? '<span class="etiqueta">' + esc(p.etiqueta) + "</span>" : "";
   return `
@@ -930,6 +930,15 @@ function seguirSeccion() {
 }
 
 // ---------- 10. ARRANQUE ----------
+// Si la foto de un producto no carga (el archivo todavía no está copiado o la ruta tiene un error de tipeo),
+// la tarjeta muestra el dibujo del producto en vez de una imagen rota.
+// "error" no sube por la página como los clicks, así que se escucha en la fase de captura (el "true" del final).
+document.addEventListener("error", evento => {
+  const foto = evento.target;
+  if (!(foto instanceof HTMLImageElement) || !foto.classList.contains("foto")) return;
+  foto.outerHTML = icono(foto.dataset.icono || "pollo");
+}, true);
+
 // Un solo "escuchador" de clicks para todos los botones "+", "-" y los enlaces internos
 document.addEventListener("click", evento => {
   if (evento.target.closest("[data-reintentar]")) { refrescarFranjas(); return; }
