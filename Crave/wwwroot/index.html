@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>CRAVE Pedidos</title>
-  <meta name="description" content="Pedí online pollo frito crujiente, combos y hamburguesas de pollo en Sunchales. Delivery y retiro.">
+  <meta name="description" content="Pedí online pollo frito crujiente, combos y hamburguesas de pollo en Sunchales, con envío a domicilio.">
   <meta name="theme-color" content="#111111">
 
   <!-- Íconos: el .ico lo usan los navegadores viejos, el .svg los modernos y el apple-touch-icon el iPhone al guardar la página en la pantalla de inicio -->
@@ -19,12 +19,12 @@
   <meta property="og:site_name" content="CRAVE">
   <meta property="og:locale" content="es_AR">
   <meta property="og:title" content="CRAVE | Pedí pollo frito online">
-  <meta property="og:description" content="Pollo frito crujiente, combos y hamburguesas. Delivery y retiro en Sunchales.">
+  <meta property="og:description" content="Pollo frito crujiente, combos y hamburguesas. Delivery en Sunchales.">
   <meta property="og:url" content="https://cravesunchales.onrender.com/">
   <meta property="og:image" content="https://cravesunchales.onrender.com/img/og-crave.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Balde de pollo crujiente de CRAVE. Pedí online, delivery y retiro.">
+  <meta property="og:image:alt" content="Balde de pollo crujiente de CRAVE. Pedí online con delivery.">
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -120,7 +120,7 @@
   <div class="contenedor">
     <!-- Cartel que aparece cuando el local está cerrado (lo llena app.js) -->
     <p class="banner-cerrado" id="banner-cerrado" role="status" hidden></p>
-    <p class="nota-demo">Página en preparación: el alias de pago y el número de WhatsApp todavía son de prueba.</p>
+    <p class="nota-demo">Página en preparación: el número de WhatsApp todavía es de prueba.</p>
   </div>
 
   <!-- PORTADA -->
@@ -144,7 +144,7 @@
           <a class="btn btn-borde" href="#combos">Ver combos</a>
         </div>
         <ul class="datos">
-          <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Delivery o retiro en el local</li>
+          <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Envío a domicilio por barrio</li>
           <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Transferencia o efectivo</li>
           <li><svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>Elegís el horario de entrega</li>
         </ul>
@@ -169,12 +169,6 @@
   <div class="cinta" aria-hidden="true"><div class="cinta-pista" id="cinta"></div></div>
 
   <div class="contenedor">
-    <!-- QUÉ SE TE ANTOJA -->
-    <section class="seccion" aria-labelledby="titulo-antojo">
-      <h2 class="titulo" id="titulo-antojo">¿Qué se te antoja?</h2>
-      <div class="antojos" id="antojos"></div>
-    </section>
-
     <!-- COMBOS -->
     <section class="seccion" id="combos" data-cat="combos" aria-labelledby="titulo-combos">
       <div class="titulo-fila">
@@ -193,7 +187,7 @@
       <h2 class="titulo" id="titulo-pasos">Pedir es fácil</h2>
       <ol class="pasos">
         <li class="paso reveal"><div class="paso-numero" aria-hidden="true">1</div><h3>Elegí tu combo</h3><p>Sumá productos desde la carta. El total se actualiza al instante.</p></li>
-        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">2</div><h3>Elegí horario y datos</h3><p>Nombre, teléfono, dirección si pedís delivery y el horario que más te queda.</p></li>
+        <li class="paso reveal"><div class="paso-numero" aria-hidden="true">2</div><h3>Elegí horario y datos</h3><p>Nombre, teléfono, dirección y el horario que más te queda.</p></li>
         <li class="paso reveal"><div class="paso-numero" aria-hidden="true">3</div><h3>Pagá y recibí</h3><p>Transferí a nuestro alias o pagá en efectivo cuando lo recibís.</p></li>
       </ol>
     </section>
@@ -223,7 +217,7 @@
     </div>
     <div class="pie-datos">
       <p>Sunchales, Santa Fe</p>
-      <p>Horarios y zonas de entrega: a confirmar</p>
+      <p>Solo envíos a domicilio</p>
     </div>
   </div>
 </footer>
@@ -256,14 +250,7 @@
         <form id="formulario" novalidate>
           <div class="errores-servidor" id="errores-servidor" role="alert" hidden></div>
 
-          <fieldset>
-            <legend>Cómo lo recibís</legend>
-            <div class="opciones">
-              <label class="opcion"><input type="radio" name="modo" value="delivery" checked><span><b>Delivery</b><small>Te lo llevamos</small></span></label>
-              <label class="opcion"><input type="radio" name="modo" value="retiro"><span><b>Retiro</b><small>Lo buscás en el local</small></span></label>
-            </div>
-          </fieldset>
-
+          <!-- No hay retiro en el local: todos los pedidos son con envío a domicilio -->
           <fieldset>
             <legend>Tus datos</legend>
             <div class="campo">
@@ -279,7 +266,7 @@
             </div>
           </fieldset>
 
-          <fieldset id="grupo-delivery">
+          <fieldset>
             <legend>Dirección de entrega</legend>
             <div class="fila-doble">
               <div class="campo">
@@ -293,7 +280,7 @@
               </div>
             </div>
             <div class="campo">
-              <label for="f-zona">Zona de entrega</label>
+              <label for="f-zona">Barrio</label>
               <select id="f-zona" name="zona" aria-describedby="e-zona"></select>
               <p class="error" id="e-zona" hidden></p>
             </div>
@@ -315,16 +302,22 @@
             <legend>Cómo pagás</legend>
             <div class="opciones">
               <label class="opcion"><input type="radio" name="pago" value="transferencia" checked><span><b>Transferencia</b><small>Desde tu app o homebanking</small></span></label>
-              <label class="opcion"><input type="radio" name="pago" value="efectivo"><span><b>Efectivo</b><small>Al recibir o retirar</small></span></label>
+              <label class="opcion"><input type="radio" name="pago" value="efectivo"><span><b>Efectivo</b><small>Al recibir el pedido</small></span></label>
             </div>
+            <!-- Los datos de la cuenta salen de CONFIG en app.js -->
             <div class="caja-pago" id="pago-transferencia">
               <dl>
                 <dt>Alias</dt><dd id="pago-alias" translate="no"></dd>
+                <dt>CBU</dt><dd id="pago-cbu" translate="no"></dd>
                 <dt>Titular</dt><dd id="pago-titular"></dd>
+                <dt>Banco</dt><dd id="pago-banco"></dd>
                 <dt>Importe</dt><dd id="pago-importe"></dd>
               </dl>
-              <button class="copiar" type="button" id="copiar-alias">Copiar alias</button>
-              <p class="ayuda">Hacé la transferencia después de confirmar el pedido y mandanos el comprobante por WhatsApp.</p>
+              <div class="botones-copiar">
+                <button class="copiar" type="button" id="copiar-alias">Copiar alias</button>
+                <button class="copiar" type="button" id="copiar-cbu">Copiar CBU</button>
+              </div>
+              <p class="ayuda">Podés transferir desde cualquier banco o billetera, también Mercado Pago. Hacé la transferencia después de confirmar el pedido y mandanos el comprobante por WhatsApp.</p>
             </div>
             <div class="campo" id="pago-efectivo" hidden>
               <label for="f-efectivo">¿Con cuánto abonás? <span class="opcional">(opcional)</span></label>

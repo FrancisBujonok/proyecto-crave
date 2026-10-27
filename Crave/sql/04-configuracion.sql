@@ -7,13 +7,13 @@ create table if not exists configuracion (
   local_abierto        boolean not null default true,
   mensaje_cerrado      text,                              -- lo que ve el cliente cuando está cerrado (puede quedar vacío)
   apertura             text    not null default '20:00',  -- primer horario que se ofrece, formato HH:mm
-  ultima_franja        text    not null default '23:30',  -- último horario de entrega que se ofrece
+  ultima_franja        text    not null default '22:30',  -- último horario de entrega que se ofrece
   minutos_preparacion  int     not null default 30 check (minutos_preparacion between 0 and 240),
-  minutos_por_franja   int     not null default 15 check (minutos_por_franja between 5 and 120),
-  pedidos_por_franja   int     not null default 4  check (pedidos_por_franja between 1 and 50)
+  minutos_por_franja   int     not null default 30 check (minutos_por_franja between 5 and 120),
+  pedidos_por_franja   int     not null default 5  check (pedidos_por_franja between 1 and 50)
 );
 
--- La fila inicial, con los mismos valores que tenía el código antes de este cambio
+-- La fila inicial, con los mismos valores por defecto que Models/Configuracion.cs
 insert into configuracion (id) values (1) on conflict (id) do nothing;
 
 -- Igual que las demás tablas: RLS activado y sin políticas (solo el servidor la lee y la escribe)

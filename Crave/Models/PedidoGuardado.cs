@@ -13,7 +13,7 @@ public class Pedido
     public string Hora { get; set; } = "";           // horario elegido, ej.: "21:15"
     public string Nombre { get; set; } = "";
     public string Telefono { get; set; } = "";
-    public string Modo { get; set; } = "";           // "delivery" o "retiro"
+    public string Modo { get; set; } = "delivery";   // siempre "delivery": no hay retiro en el local (la columna queda en la tabla)
     public string Direccion { get; set; } = "";
     public string? Referencias { get; set; }
     public string Pago { get; set; } = "";           // "transferencia" o "efectivo"

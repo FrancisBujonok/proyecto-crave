@@ -494,15 +494,15 @@ const MENU_DEMO = {
     }
   ],
   "zonas": [
-    {
-      "id": "z1",
-      "nombre": "Zona 1",
-      "costo": 1000
-    },
-    {
-      "id": "z2",
-      "nombre": "Zona 2",
-      "costo": 1800
-    }
+    { "id": "9-de-julio", "nombre": "9 de Julio", "costo": 1000 },
+    { "id": "colon", "nombre": "Colón", "costo": 1000 },
+    { "id": "villa-del-parque", "nombre": "Villa del Parque", "costo": 1000 },
+    { "id": "barrio-sancor", "nombre": "Barrio Sancor", "costo": 1500 },
+    { "id": "centro", "nombre": "Centro", "costo": 1500 },
+    { "id": "ciudad-verde", "nombre": "Ciudad Verde", "costo": 2000 },
+    { "id": "cooperativo", "nombre": "Cooperativo", "costo": 2000 },
+    { "id": "moreno", "nombre": "Moreno", "costo": 2000 },
+    { "id": "villa-autodromo", "nombre": "Villa Autódromo", "costo": 2000 },
+    { "id": "zona-sur", "nombre": "Zona Sur", "costo": 2000 }
   ]
 };

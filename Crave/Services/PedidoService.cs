@@ -34,10 +34,10 @@ public class PedidoService
         return await _db.Productos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
     }
 
-    // Solo hay zona si el pedido es delivery y la zona existe. Si no, devuelve null.
+    // El barrio elegido (fila de la tabla "zonas"). Devuelve null si no existe.
+    // Todos los pedidos son con envío: no hay retiro en el local.
     async Task<Zona?> BuscarZona(PedidoNuevo pedido)
     {
-        if (pedido.Modo != "delivery") return null;
         return await _db.Zonas.FirstOrDefaultAsync(z => z.Id == pedido.ZonaId);
     }
 
@@ -125,9 +125,6 @@ public class PedidoService
         if (pedido.Telefono.Count(char.IsDigit) < 8)
             errores.Add("Escribí un teléfono con característica.");
 
-        if (pedido.Modo != "delivery" && pedido.Modo != "retiro")
-            errores.Add("Elegí delivery o retiro.");
-
         if (pedido.Pago != "transferencia" && pedido.Pago != "efectivo")
             errores.Add("Elegí cómo pagás.");
 
@@ -164,14 +161,11 @@ public class PedidoService
         if (pasaElMaximo)
             errores.Add("La cantidad de cada producto tiene que estar entre 1 y 30.");
 
-        if (pedido.Modo == "delivery")
-        {
-            if (pedido.Calle.Trim().Length < 4)
-                errores.Add("Escribí la calle y el número.");
+        if (pedido.Calle.Trim().Length < 4)
+            errores.Add("Escribí la calle y el número.");
 
-            if (zona == null)
-                errores.Add("Elegí la zona de entrega.");
-        }
+        if (zona == null)
+            errores.Add("Elegí tu barrio.");
 
         // Con el local cerrado no se acepta nada. Si no, el horario tiene que existir hoy y tener lugar.
         if (!abierto)
@@ -208,20 +202,17 @@ public class PedidoService
     {
         var productos = await BuscarProductos(pedido);
         var gaseosas = await BuscarGaseosas();
-        var zona = await BuscarZona(pedido);
+        var zona = await BuscarZona(pedido);   // Validar ya revisó que el barrio exista
         bool promoActiva = await PromoActiva();
 
         int subtotal = CalcularSubtotal(pedido, productos, promoActiva);
         int envio = zona?.Costo ?? 0;
         int total = subtotal + envio;
 
-        string direccion = "Retiro en el local";
-        if (zona != null)
-        {
-            direccion = pedido.Calle.Trim();
-            if (pedido.Piso.Trim() != "") direccion += " (" + pedido.Piso.Trim() + ")";
-            direccion += ", " + zona.Nombre;
-        }
+        // Ejemplo: "Bv. Ejemplo 1234 (2°B), Barrio Sancor". El barrio queda escrito para el que hace el envío.
+        string direccion = pedido.Calle.Trim();
+        if (pedido.Piso.Trim() != "") direccion += " (" + pedido.Piso.Trim() + ")";
+        if (zona != null) direccion += ", " + zona.Nombre;
 
         int vuelto = 0;
         if (pedido.Pago == "efectivo" && pedido.AbonaCon > 0)
@@ -236,7 +227,7 @@ public class PedidoService
             Hora = pedido.Hora,
             Nombre = pedido.Nombre.Trim(),
             Telefono = pedido.Telefono.Trim(),
-            Modo = pedido.Modo,
+            Modo = "delivery",   // no hay retiro en el local
             Direccion = direccion,
             Referencias = pedido.Referencias.Trim() == "" ? null : pedido.Referencias.Trim(),
             Pago = pedido.Pago,
@@ -289,7 +280,6 @@ public class PedidoService
             Fecha = ahora,
             Nombre = nuevo.Nombre,
             Telefono = nuevo.Telefono,
-            Modo = nuevo.Modo,
             Direccion = direccion,
             Hora = nuevo.Hora,
             Pago = nuevo.Pago,

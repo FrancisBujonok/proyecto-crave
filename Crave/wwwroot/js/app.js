@@ -13,8 +13,13 @@ const paginaAbiertaEn = Date.now();   // para el antispam: el servidor mira cuá
 
 const CONFIG = {
   whatsapp: "5490000000000",          // ejemplo: reemplazar por el número real. Formato: 54 + 9 + código de área sin 0 + número sin 15 (ej.: 5493493123456)
-  alias: "CRAVE.PEDIDOS.EJEMPLO",
-  titular: "Titular de ejemplo",
+
+  // Cuenta para las transferencias (Naranja X). Se puede pagar desde cualquier banco o billetera, también Mercado Pago.
+  // Si algún día cambia la cuenta, se cambia solo acá.
+  alias: "crave.pagos",
+  cbu: "4530000800010594998201",
+  titular: "Priscila Antonella Nair Sisi Acosta",
+  banco: "Naranja X",
 
   // Textos de la promo. Solo se ven cuando está prendida desde el panel ("Activar precios de lanzamiento").
   // Los precios NO están acá: salen de la base (columna precio_promo) y los calcula el servidor.
@@ -26,7 +31,7 @@ const CONFIG = {
 
 // Solo para el modo demo: imita lo que hace HorarioService.cs en el servidor.
 // En el modo real estos números se configuran en C# y esta constante no se usa.
-const DEMO_HORARIOS = { apertura: "20:00", ultima: "23:30", cadaMinutos: 15, cupo: 4, ahora: "19:40", preparacion: 30 };
+const DEMO_HORARIOS = { apertura: "20:00", ultima: "22:30", cadaMinutos: 30, cupo: 5, ahora: "19:20", preparacion: 30 };
 
 // ---------- 2. ESTADO (los datos que cambian) ----------
 let menu = { categorias: [], zonas: [] };
@@ -155,14 +160,6 @@ function dibujarPastillas() {
   $("#pastillas").innerHTML = html;
 }
 
-function dibujarAntojos() {
-  $("#antojos").innerHTML = menu.categorias.map(c => `
-    <a class="antojo" href="#cat-${c.id}">
-      ${icono(c.icono)}
-      <span><b>${esc(c.nombre)}</b><small>${esc(c.nota)}</small></span>
-    </a>`).join("");
-}
-
 // La tarjeta de un producto. Se usa en los combos y en la carta.
 function tarjetaHTML(p) {
   const arte = p.imagen
@@ -242,7 +239,7 @@ function aMinutos(texto) { const [h, m] = texto.split(":"); return Number(h) * 6
 function aTexto(minutos) { return String(Math.floor(minutos / 60)).padStart(2, "0") + ":" + String(minutos % 60).padStart(2, "0"); }
 
 // Modo demo: arma los horarios como lo haría el servidor. Algunos ya vienen llenos para mostrar cómo se ven.
-let ocupadosDemo = { "20:15": 3, "20:30": 4, "21:00": 2, "21:30": 4 };   // hora -> pedidos ya tomados
+let ocupadosDemo = { "20:00": 3, "20:30": 5, "21:00": 4, "21:30": 2 };   // hora -> pedidos ya tomados
 function franjasDeEjemplo() {
   const d = DEMO_HORARIOS;
   const minimo = aMinutos(d.ahora) + d.preparacion;
@@ -325,8 +322,9 @@ async function refrescarFranjas() {
   dibujarFranjas();
 }
 
+// Una opción por barrio, con su costo de envío. Vienen de la tabla "zonas", ya ordenadas por costo.
 function llenarZonas() {
-  let html = '<option value="">Elegí tu zona…</option>';
+  let html = '<option value="">Elegí tu barrio…</option>';
   menu.zonas.forEach(z => { html += '<option value="' + z.id + '">' + esc(z.nombre) + " · " + dinero.format(z.costo) + "</option>"; });
   $("#f-zona").innerHTML = html;
 }
@@ -382,9 +380,9 @@ function calcularAhorro() {
   return ahorro;
 }
 
-function modoEntrega() { return $("#formulario").elements.modo.value; }          // "delivery" o "retiro"
+// Todos los pedidos son con envío (no hay retiro en el local). El costo depende del barrio.
 function zonaElegida() { return menu.zonas.find(z => z.id === $("#f-zona").value); }
-function calcularEnvio() { return (modoEntrega() === "delivery" && zonaElegida()) ? zonaElegida().costo : 0; }
+function calcularEnvio() { return zonaElegida() ? zonaElegida().costo : 0; }
 function calcularTotal() { return calcularSubtotal() + calcularEnvio(); }
 
 // Al redibujar se pierde el foco del teclado: esta función se lo devuelve al botón que corresponde.
@@ -572,7 +570,6 @@ function actualizarTodo() {
   const subtotal = calcularSubtotal();
   const envio = calcularEnvio();
   const total = subtotal + envio;
-  const entrega = modoEntrega() === "delivery";
 
   // Contador de arriba y píldora flotante del móvil
   $("#insignia").textContent = unidades;
@@ -622,7 +619,7 @@ function actualizarTodo() {
   const ahorro = calcularAhorro();
   $("#resumen").innerHTML = `
     <div><span>Subtotal</span><span>${dinero.format(subtotal)}</span></div>
-    <div><span>Envío</span><span>${entrega ? (zonaElegida() ? dinero.format(envio) : "Elegí tu zona") : "Retiro sin costo"}</span></div>
+    <div><span>Envío</span><span>${zonaElegida() ? dinero.format(envio) : "Elegí tu barrio"}</span></div>
     <div class="total"><span>Total</span><span>${dinero.format(total)}</span></div>
     ${ahorro > 0 ? '<p class="ahorro">Con ' + esc(CONFIG.promo.nombre) + " te ahorrás <b>" + dinero.format(ahorro) + "</b>.</p>" : ""}`;
   $("#total-pie").textContent = dinero.format(total);
@@ -630,11 +627,9 @@ function actualizarTodo() {
 }
 
 // ---------- 6. FORMULARIO ----------
-// Muestra u oculta los grupos según lo que eligió la persona
+// Muestra u oculta los datos de cada forma de pago según lo que eligió la persona
 function sincronizarFormulario() {
   const f = $("#formulario").elements;
-  $("#grupo-delivery").hidden = f.modo.value !== "delivery";
-  $("#legend-horario").textContent = f.modo.value === "delivery" ? "Horario de entrega" : "Horario de retiro";
   $("#pago-transferencia").hidden = f.pago.value !== "transferencia";
   $("#pago-efectivo").hidden = f.pago.value !== "efectivo";
   actualizarTodo();
@@ -667,10 +662,8 @@ function validarFormulario() {
   exigir("#f-nombre", f.nombre.value.trim().length >= 3, "Escribí tu nombre y apellido.");
   exigir("#f-telefono", f.telefono.value.replace(/\D/g, "").length >= 8, "Escribí un teléfono con característica, por ejemplo 3493 15 000000.");
 
-  if (f.modo.value === "delivery") {
-    exigir("#f-calle", f.calle.value.trim().length >= 4, "Escribí la calle y el número.");
-    exigir("#f-zona", !!zonaElegida(), "Elegí la zona para calcular el envío.");
-  }
+  exigir("#f-calle", f.calle.value.trim().length >= 4, "Escribí la calle y el número.");
+  exigir("#f-zona", !!zonaElegida(), "Elegí tu barrio para calcular el envío.");
   exigir("#f-hora", horaElegida() !== "", "Elegí en qué horario lo querés.");
   if (f.pago.value === "efectivo" && f.efectivo.value.trim() !== "") {
     const abona = parseInt(f.efectivo.value.replace(/\D/g, ""), 10) || 0;
@@ -688,7 +681,6 @@ function leerPedidoDelFormulario() {
   return {
     nombre: f.nombre.value.trim(),
     telefono: f.telefono.value.trim(),
-    modo: f.modo.value,
     calle: f.calle.value.trim(),
     piso: f.piso.value.trim(),
     zonaId: f.zona.value,
@@ -733,13 +725,13 @@ function pedidoDeEjemplo(datos) {
   }));
   const subtotal = lineas.reduce((suma, l) => suma + l.precio * l.cantidad, 0);
   const zona = menu.zonas.find(z => z.id === datos.zonaId);
-  const envio = (datos.modo === "delivery" && zona) ? zona.costo : 0;
+  const envio = zona ? zona.costo : 0;
   const total = subtotal + envio;
   return {
     numero: "CR-" + (1000 + Math.floor(Math.random() * 9000)),
     nombre: datos.nombre,
     hora: datos.hora,
-    direccion: datos.modo === "delivery" ? datos.calle + (datos.piso ? " (" + datos.piso + ")" : "") + ", " + (zona ? zona.nombre : "") : "Retiro en el local",
+    direccion: datos.calle + (datos.piso ? " (" + datos.piso + ")" : "") + ", " + (zona ? zona.nombre : ""),
     subtotal: subtotal, envio: envio, total: total, lineas: lineas,
     vuelto: (datos.pago === "efectivo" && datos.abonaCon > 0) ? datos.abonaCon - total : 0
   };
@@ -844,7 +836,7 @@ function enlaceSeguimiento(pedido) {
 
 function textoParaWhatsApp(pedido, datos) {
   const l = ["Pedido CRAVE " + pedido.numero, "Nombre: " + pedido.nombre, "Teléfono: " + datos.telefono];
-  l.push("Entrega: " + (datos.modo === "delivery" ? "delivery a " + pedido.direccion + (datos.referencias ? ". Ref.: " + datos.referencias : "") : "retiro en el local"));
+  l.push("Entrega: " + pedido.direccion + (datos.referencias ? ". Ref.: " + datos.referencias : ""));
   l.push("Horario: " + datos.hora + " hs", "");
   pedido.lineas.forEach(x => l.push(x.cantidad + " x " + x.nombre + (x.detalle ? " (" + x.detalle + ")" : "") + " — " + dinero.format(x.cantidad * x.precio)));
   l.push("", "Subtotal: " + dinero.format(pedido.subtotal), "Envío: " + dinero.format(pedido.envio), "Total: " + dinero.format(pedido.total));
@@ -858,16 +850,25 @@ function mostrarConfirmacion(pedido, datos) {
   const mensaje = textoParaWhatsApp(pedido, datos);
   const pago = datos.pago === "transferencia"
     ? `<div class="caja-pago">
-         <dl><dt>Alias</dt><dd translate="no">${esc(CONFIG.alias)}</dd><dt>Titular</dt><dd>${esc(CONFIG.titular)}</dd><dt>Importe</dt><dd>${dinero.format(pedido.total)}</dd></dl>
-         <button class="copiar" type="button" id="final-copiar-alias">Copiar alias</button>
-         <p class="ayuda">Transferí el importe y mandanos el comprobante por WhatsApp. Empezamos a preparar el pedido cuando se acredita.</p>
+         <dl>
+           <dt>Alias</dt><dd translate="no">${esc(CONFIG.alias)}</dd>
+           <dt>CBU</dt><dd translate="no">${esc(CONFIG.cbu)}</dd>
+           <dt>Titular</dt><dd>${esc(CONFIG.titular)}</dd>
+           <dt>Banco</dt><dd>${esc(CONFIG.banco)}</dd>
+           <dt>Importe</dt><dd>${dinero.format(pedido.total)}</dd>
+         </dl>
+         <div class="botones-copiar">
+           <button class="copiar" type="button" id="final-copiar-alias">Copiar alias</button>
+           <button class="copiar" type="button" id="final-copiar-cbu">Copiar CBU</button>
+         </div>
+         <p class="ayuda">Transferí el importe desde cualquier banco o billetera (también Mercado Pago) y mandanos el comprobante por WhatsApp. Empezamos a preparar el pedido cuando se acredita.</p>
        </div>`
-    : `<div class="aviso-final">Pagás en efectivo ${datos.modo === "delivery" ? "cuando te lo llevamos" : "al retirar"}. ${pedido.vuelto > 0 ? "Vas a abonar con " + dinero.format(datos.abonaCon) + "; el vuelto es " + dinero.format(pedido.vuelto) + "." : "Tené " + dinero.format(pedido.total) + " justo."}</div>`;
+    : `<div class="aviso-final">Pagás en efectivo cuando te lo llevamos. ${pedido.vuelto > 0 ? "Vas a abonar con " + dinero.format(datos.abonaCon) + "; el vuelto es " + dinero.format(pedido.vuelto) + "." : "Tené " + dinero.format(pedido.total) + " justo."}</div>`;
 
   $("#vista-final").innerHTML = `
     <svg class="tilde" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="36"/><path d="M28 45l11 11 22-24"/></svg>
     <h3 id="final-titulo" tabindex="-1">Pedido <span style="white-space:nowrap">${esc(pedido.numero)}</span> registrado</h3>
-    <p class="ayuda" style="margin-top:8px">${datos.modo === "delivery" ? "Te lo llevamos a " + esc(pedido.direccion) : "Lo retirás en el local"}. Horario: ${esc(datos.hora)} hs.</p>
+    <p class="ayuda" style="margin-top:8px">Te lo llevamos a ${esc(pedido.direccion)}. Horario: ${esc(datos.hora)} hs.</p>
     <ul class="lineas-pedido" style="margin-top:14px">
       ${pedido.lineas.map(x => `<li><div><b>${x.cantidad} × ${esc(x.nombre)}</b>${x.detalle ? '<div class="sub">' + esc(x.detalle) + "</div>" : ""}</div><div class="importe">${dinero.format(x.cantidad * x.precio)}</div></li>`).join("")}
     </ul>
@@ -891,6 +892,8 @@ function mostrarConfirmacion(pedido, datos) {
 
   const copiarAlias = $("#final-copiar-alias");
   if (copiarAlias) copiarAlias.addEventListener("click", e => copiarTexto(CONFIG.alias, e.currentTarget, "Copiar alias"));
+  const copiarCbu = $("#final-copiar-cbu");
+  if (copiarCbu) copiarCbu.addEventListener("click", e => copiarTexto(CONFIG.cbu, e.currentTarget, "Copiar CBU"));
   $("#final-copiar-resumen").addEventListener("click", e => copiarTexto(mensaje, e.currentTarget, "Copiar resumen del pedido"));
   $("#final-otro").addEventListener("click", () => { cerrarCajon(); });
 
@@ -1069,10 +1072,13 @@ $("#formulario").addEventListener("input", e => {
 });
 $("#formulario").addEventListener("submit", alConfirmar);
 $("#copiar-alias").addEventListener("click", e => copiarTexto(CONFIG.alias, e.currentTarget, "Copiar alias"));
+$("#copiar-cbu").addEventListener("click", e => copiarTexto(CONFIG.cbu, e.currentTarget, "Copiar CBU"));
 // Enlace de WhatsApp de la banda final: abre un chat con el número de CONFIG (el mismo que recibe los pedidos)
 $("#enlace-whatsapp").href = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent("Hola CRAVE, quiero hacer una consulta.");
 $("#pago-alias").textContent = CONFIG.alias;
+$("#pago-cbu").textContent = CONFIG.cbu;
 $("#pago-titular").textContent = CONFIG.titular;
+$("#pago-banco").textContent = CONFIG.banco;
 
 async function iniciar() {
   dibujarFilas();
@@ -1090,7 +1096,6 @@ async function iniciar() {
   leerCarrito();
 
   dibujarPastillas();
-  dibujarAntojos();
   dibujarCombos();
   dibujarCarta();
   llenarZonas();

@@ -287,12 +287,8 @@ function tarjetaPedido(p) {
   const telefonoLimpio = p.telefono.replace(/[^\d+]/g, "");
   const cliente = '<a href="tel:' + esc(telefonoLimpio) + '">' + esc(p.telefono) + '</a>';
 
-  let entrega;
-  if (p.modo === "delivery") {
-    entrega = '<b>Delivery:</b> ' + esc(p.direccion) + (p.referencias ? ' (' + esc(p.referencias) + ')' : '');
-  } else {
-    entrega = '<b>Retiro</b> en el local';
-  }
+  // Todos los pedidos son con envío a domicilio (no hay retiro en el local)
+  const entrega = '<b>Delivery:</b> ' + esc(p.direccion) + (p.referencias ? ' (' + esc(p.referencias) + ')' : '');
 
   const envio = p.envio > 0 ? '<div class="linea">Envío ' + plata(p.envio) + '</div>' : '';
   const nota = p.notas ? '<div class="nota"><b>Nota:</b> ' + esc(p.notas) + '</div>' : '';

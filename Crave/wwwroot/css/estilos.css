@@ -77,17 +77,17 @@ img, svg { max-width: 100%; }
    y abajo a la derecha), como una etiqueta. El tamaño del corte sale de --c, que cada elemento define abajo.
    Ojo: clip-path también recorta el contorno de foco (outline) que está AFUERA del elemento, por eso estos
    elementos dibujan el foco ADENTRO (ver :focus-visible más abajo). */
-.btn, .boton-pedido, .pastilla, .insignia, .pausa, .antojo, .tarjeta, .mas, .cantidad, .chip-agotado,
+.btn, .boton-pedido, .pastilla, .insignia, .pausa, .tarjeta, .mas, .cantidad, .chip-agotado,
 .pildora, .pildora-total, .cerrar, .copiar, .paso, .selector, .btn-borde::before {
   clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
 }
 .btn, .boton-pedido, .pildora, .copiar { --c: var(--corte-chico); }
 .pastilla, .insignia, .pausa, .mas, .cantidad, .chip-agotado, .cerrar, .pildora-total { --c: var(--corte-mini); }
-.antojo, .tarjeta, .paso, .selector { --c: var(--corte); }
+.tarjeta, .paso, .selector { --c: var(--corte); }
 
 /* Las cartas tienen borde; con el corte, el borde quedaría abierto en las diagonales.
    Se cierra con dos rayitas (degradados duros en cada esquina cortada) del mismo color que el borde. */
-.tarjeta, .paso, .antojo, .selector {
+.tarjeta, .paso, .selector {
   --lc: var(--linea);   /* color del borde, para usar igual en el borde y en las rayas */
   background-image:
     linear-gradient(135deg, transparent 50%, var(--lc) 50%, var(--lc) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
@@ -99,7 +99,7 @@ img, svg { max-width: 100%; }
 }
 
 /* Foco por teclado: adentro del botón (si fuera afuera, el recorte lo taparía) */
-:is(.btn, .boton-pedido, .pastilla, .mas, .cantidad button, .copiar, .cerrar, .pausa, .pildora, .antojo):focus-visible {
+:is(.btn, .boton-pedido, .pastilla, .mas, .cantidad button, .copiar, .cerrar, .pausa, .pildora):focus-visible {
   outline: 3px solid currentColor; outline-offset: -6px;
 }
 
@@ -254,23 +254,6 @@ body::after {
 }
 .titulo-fila { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin-bottom: 20px; }
 .nota { color: var(--apagado); }
-
-.antojos { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; }
-.antojo {
-  display: flex; align-items: center; gap: 16px; padding: 16px 20px 16px 16px;
-  background-color: var(--tarjeta); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1.5px var(--linea);
-  color: var(--texto); text-decoration: none;
-  transition: transform .25s var(--suave), box-shadow .2s ease-out;
-}
-.antojo:hover { transform: translateY(-4px); box-shadow: inset 0 0 0 1.5px var(--linea), inset 5px 0 0 var(--rojo); }
-.antojo .icono { width: 72px; height: 72px; flex: none; transition: transform .4s var(--rebote); }
-.antojo:hover .icono { transform: rotate(-9deg) scale(1.1); }
-.antojo b {
-  display: block; font-family: var(--fuente-titulo); font-weight: 900; text-transform: uppercase;
-  font-size: 1.5rem; line-height: 1.05; letter-spacing: -.01em;
-}
-.antojo small { color: var(--apagado); font-size: .9375rem; }
-@media (min-width: 640px) { .antojos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* Combos: fila que se desliza hacia el costado */
 .carril {
@@ -463,6 +446,7 @@ input:hover, select:hover, textarea:hover { border-color: var(--linea-fuerte); }
 .caja-pago dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; }
 .caja-pago dt { color: var(--apagado); }
 .caja-pago dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.botones-copiar { display: flex; flex-wrap: wrap; gap: 8px; }
 .copiar { justify-self: start; min-height: 40px; padding: 8px 16px; background: var(--tarjeta-2); border: 0; border-radius: 0; font-weight: 700; }
 .copiar:hover { background: var(--linea); }
 

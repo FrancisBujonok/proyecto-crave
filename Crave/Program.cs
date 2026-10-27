@@ -51,7 +51,7 @@ app.MapGet("/api/menu", async (CraveDb db, IConfigService config) =>
         .Include(c => c.Productos.OrderBy(p => p.Orden))   // trae también los productos de cada categoría
         .OrderBy(c => c.Orden)
         .ToListAsync();
-    var zonas = await db.Zonas.OrderBy(z => z.Id).ToListAsync();
+    var zonas = await db.Zonas.OrderBy(z => z.Costo).ThenBy(z => z.Nombre).ToListAsync();   // barrios: primero los más cercanos (envío más barato)
     bool promoActiva = (await config.Obtener()).PromoActiva;
 
     return ArmarCarta.Desde(categorias, zonas, promoActiva);

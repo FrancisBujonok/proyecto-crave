@@ -40,7 +40,7 @@ public static class PedidoReglas
     public static List<string> RevisarForma(PedidoNuevo pedido)
     {
         // El JSON puede traer "nombre": null aunque en C# la propiedad no admita null. Sin esta revisión, un null rompería el servidor.
-        if (pedido.Nombre is null || pedido.Telefono is null || pedido.Modo is null || pedido.Calle is null
+        if (pedido.Nombre is null || pedido.Telefono is null || pedido.Calle is null
             || pedido.Piso is null || pedido.ZonaId is null || pedido.Referencias is null || pedido.Hora is null
             || pedido.Pago is null || pedido.Notas is null || pedido.Items is null)
             return new List<string> { "Faltan datos del pedido." };
@@ -69,7 +69,7 @@ public static class PedidoReglas
         Largo(errores, pedido.Referencias, MaxReferencias, "Las referencias", permiteSaltos: true);
         Largo(errores, pedido.Notas, MaxNotas, "Las aclaraciones", permiteSaltos: true);
 
-        if (pedido.ZonaId.Length > MaxIdTexto || pedido.Hora.Length > 5 || pedido.Modo.Length > 10 || pedido.Pago.Length > 20)
+        if (pedido.ZonaId.Length > MaxIdTexto || pedido.Hora.Length > 5 || pedido.Pago.Length > 20)
             errores.Add("Hay datos del pedido que no son válidos.");
 
         // El teléfono solo puede tener números y los signos habituales

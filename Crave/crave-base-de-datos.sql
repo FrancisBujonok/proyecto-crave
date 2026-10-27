@@ -51,7 +51,7 @@ create table pedidos (
   hora        text not null,           -- "21:15"
   nombre      text not null,
   telefono    text not null,
-  modo        text not null,           -- "delivery" o "retiro"
+  modo        text not null,           -- siempre "delivery" (no hay retiro en el local)
   direccion   text not null,
   referencias text,
   pago        text not null,           -- "transferencia" o "efectivo"

@@ -13,14 +13,14 @@ public class ItemPedido
     public List<string> Gaseosas { get; set; } = new();
 }
 
+// Todos los pedidos son con envío a domicilio: no hay retiro en el local, así que siempre hay dirección y barrio.
 public class PedidoNuevo
 {
     public string Nombre { get; set; } = "";
     public string Telefono { get; set; } = "";
-    public string Modo { get; set; } = "delivery";          // "delivery" o "retiro"
     public string Calle { get; set; } = "";
     public string Piso { get; set; } = "";
-    public string ZonaId { get; set; } = "";
+    public string ZonaId { get; set; } = "";                 // el barrio (fila de la tabla "zonas"); define el costo de envío
     public string Referencias { get; set; } = "";
     public string Hora { get; set; } = "";                   // horario elegido, ej.: "21:15" (sale de /api/franjas)
     public string Pago { get; set; } = "transferencia";      // "transferencia" o "efectivo"
@@ -51,7 +51,6 @@ public class PedidoCreado
     public DateTime Fecha { get; set; }
     public string Nombre { get; set; } = "";
     public string Telefono { get; set; } = "";
-    public string Modo { get; set; } = "";
     public string Direccion { get; set; } = "";
     public string Hora { get; set; } = "";
     public string Pago { get; set; } = "";

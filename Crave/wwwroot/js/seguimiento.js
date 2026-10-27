@@ -1,7 +1,7 @@
 // Página de seguimiento del pedido (seguimiento.html).
 // El cliente llega con un enlace /seguimiento.html?c=CODIGO. Le preguntamos al servidor por ese código
 // cada 15 segundos y mostramos en qué estado está su pedido. Cuando se entrega o se cancela dejamos de preguntar.
-// El servidor solo manda lo mínimo (número, estado, horario, modo, pago y total): nada de datos personales.
+// El servidor solo manda lo mínimo (número, estado, horario, pago y total): nada de datos personales.
 
 const CADA_MS = 15000;          // se vuelve a preguntar cada 15 segundos
 const ESPERA_LIMITE_MS = 60000; // si el servidor dice "demasiadas consultas" (429), esperamos un minuto
@@ -26,17 +26,15 @@ let detenido = false;   // true cuando ya no hay nada más que preguntar (entreg
 // Todo texto que viene del servidor se pone con textContent (nunca con innerHTML): así no se puede colar código.
 
 // Qué se le dice al cliente en cada estado: [título, detalle]
+// Todos los pedidos son con envío a domicilio (no hay retiro en el local).
 function mensajeDe(p) {
-  const delivery = p.modo === "delivery";
   switch (p.estado) {
     case "nuevo":
       return ["Recibimos tu pedido", "En breve lo empezamos a preparar."];
     case "preparando":
       return ["Estamos preparando tu pedido", "Tu horario es a las " + p.hora + " hs."];
     case "listo":
-      return delivery
-        ? ["Tu pedido está listo", "Sale hacia tu domicilio."]
-        : ["Tu pedido está listo para retirar", "Te esperamos en el local."];
+      return ["Tu pedido está listo", "Sale hacia tu domicilio."];
     case "entregado":
       return ["Pedido entregado", "¡Gracias por pedir en CRAVE!"];
     case "cancelado":
@@ -52,7 +50,7 @@ function textoPago(p) {
     if (p.pagoConfirmado) return "Transferencia recibida";
     return p.estado === "cancelado" ? "Transferencia sin acreditar" : "Transferencia: falta confirmarla";
   }
-  return "Efectivo " + (p.modo === "delivery" ? "al recibirlo" : "al retirar");
+  return "Efectivo al recibirlo";
 }
 
 function dibujarPasos(p) {
@@ -86,7 +84,6 @@ function dibujarPasos(p) {
 function dibujarDatos(p) {
   const filas = [
     ["Horario", p.hora + " hs"],
-    ["Entrega", p.modo === "delivery" ? "Delivery" : "Retiro en el local"],
     ["Pago", textoPago(p)],
     ["Total", dinero.format(p.total)]
   ];

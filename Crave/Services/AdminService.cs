@@ -132,7 +132,6 @@ public class AdminService : IAdminService
             Hora = p.Hora,
             Nombre = p.Nombre,
             Telefono = p.Telefono,
-            Modo = p.Modo,
             Direccion = p.Direccion,
             Referencias = p.Referencias,
             Pago = p.Pago,

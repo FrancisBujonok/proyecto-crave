@@ -49,6 +49,7 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `wwwroot/img/productos/` | Fotos de los productos. |
 | `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (Familiar para 6, tacos). |
 | `sql/08-lanzamiento.sql` | Precios reales y de lanzamiento, tacos "Próximamente" y el interruptor de la promo. Correrlo ANTES de subir el código de la semana de lanzamiento. |
+| `sql/09-envios-y-horarios.sql` | Carga los barrios con su costo de envío y deja los horarios de 20:00 a 22:30, cada 30 minutos, 5 pedidos por horario. |
 | `Services/Precios.cs` | La única regla de precios: qué se cobra (normal o de lanzamiento), qué se tacha y el porcentaje de descuento. |
 | `Services/ArmarCarta.cs` | Arma la carta que recibe la página (`Models/Carta.cs`) con los precios de hoy ya calculados. |
 | `wwwroot/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Ícono de la pestaña, del iPhone y de Android (la "A" roja del logo sobre negro). |
@@ -62,21 +63,43 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 4. `PedidoService.Validar` revisa todo. Si hay problemas, responde 400 con la lista y la página los muestra.
 5. Si está bien, `PedidoService.Crear` vuelve a revisar el cupo del horario (por si otro cliente se llevó el último lugar), calcula los importes con los precios de la tabla `productos`, guarda el pedido en la base (dentro de una transacción con candado por horario) y lo devuelve.
 
+## Envíos (no hay retiro en el local)
+
+CRAVE solo hace envíos a domicilio: no hay retiro en el local. Por eso el formulario no pregunta "delivery o retiro", siempre pide dirección y barrio, y el servidor guarda todos los pedidos con `modo = "delivery"` (la columna sigue en la tabla `pedidos`).
+**Si en el futuro se toca el formulario o los textos, no volver a agregar la opción de retiro.**
+
+El costo del envío depende del barrio. Cada barrio es una fila de la tabla `zonas` (se cargan con `sql/09-envios-y-horarios.sql`):
+
+| Zona | Barrios | Envío |
+|---|---|---|
+| Cercana | Colón, 9 de Julio, Villa del Parque | $1000 |
+| Media | Centro, Barrio Sancor | $1500 |
+| Lejos | Moreno, Cooperativo, Zona Sur, Ciudad Verde, Villa Autódromo | $2000 |
+
+- El cliente elige su barrio en una lista (ordenada por costo). No hay opción "Otro": solo se aceptan los barrios de la tabla.
+- La dirección que se guarda termina con el nombre del barrio, ej.: "Bv. Ejemplo 1234 (2°B), Centro".
+- Para cambiar un costo o agregar un barrio: Supabase -> Table Editor -> `zonas`. Se ve al recargar la página.
+
+## Datos para la transferencia
+
+El alias, el CBU, el titular y el banco (cuenta de Naranja X) están en `CONFIG`, al principio de `wwwroot/js/app.js`. Se puede transferir desde cualquier banco o billetera, también Mercado Pago. Si cambia la cuenta, se cambia solo ahí.
+
 ## Horarios con cupo
 
 El cliente elige un horario de una grilla en vez de "lo antes posible". Cada horario tiene un cupo de pedidos; cuando se llena, aparece tachado como "Completo".
+Hoy: de 20:00 a 22:30, uno cada 30 minutos, 5 pedidos por horario (6 horarios x 5 = 30 pedidos por día como máximo). Si hace falta más lugar, se sube "Pedidos por horario" desde el panel.
 Se configura desde el panel, pestaña "Horarios" (los valores se guardan en la tabla `configuracion`, una sola fila):
 
 | Campo | Qué controla |
 |---|---|
 | Minutos de preparación | El primer horario ofrecido es "ahora + estos minutos". |
-| Minutos entre horarios | Cada cuántos minutos hay un horario (15). |
-| Pedidos por horario | Cuántos pedidos entran en cada horario. |
-| Primer / último horario | Desde y hasta qué hora se ofrecen horarios. |
+| Minutos entre horarios | Cada cuántos minutos hay un horario (30). |
+| Pedidos por horario | Cuántos pedidos entran en cada horario (5). |
+| Primer / último horario | Desde y hasta qué hora se ofrecen horarios (20:00 y 22:30). |
 | Mensaje de local cerrado | Lo que ven los clientes cuando el local está cerrado. |
 
 Arriba de todo el panel hay un botón "Cerrar local" / "Abrir local". Con el local cerrado la tienda muestra un cartel con el mensaje, no ofrece horarios y el servidor rechaza cualquier pedido.
-Para que esto funcione hay que correr una vez `sql/04-configuracion.sql` en Supabase. Si la tabla todavía no existe, el servidor usa los valores de siempre (20:00 a 23:30, cada 15 minutos, 4 pedidos, 30 de preparación).
+Para que esto funcione hay que correr una vez `sql/04-configuracion.sql` en Supabase. Si la tabla todavía no existe, el servidor usa los valores de `Models/Configuracion.cs` (20:00 a 22:30, cada 30 minutos, 5 pedidos, 30 de preparación).
 La cuenta de los horarios está en `Services/GeneradorFranjas.cs` y las reglas del formulario en `Services/ConfigReglas.cs`.
 
 Si dos clientes eligen el último lugar a la vez, el segundo recibe un 409 con el mensaje "Ese horario se acaba de completar" y la página le muestra los horarios actualizados.
@@ -188,7 +211,7 @@ Al confirmar un pedido, el cliente recibe un enlace `/seguimiento.html?c=CODIGO`
 Para que funcione hay que correr una vez `sql/06-seguimiento.sql` en Supabase, ANTES de subir el código.
 
 - **Por qué un código y no el número CR-1001:** el número es correlativo, así que cualquiera podría probar CR-1002, CR-1003... y mirar pedidos ajenos. El código tiene 12 letras y números al azar (`SeguimientoReglas.NuevoCodigo`, con `RandomNumberGenerator`, el azar de seguridad de .NET): más de 7 x 10^17 combinaciones. Sin el enlace no hay forma práctica de llegar al pedido.
-- **Qué devuelve `GET /api/seguimiento/{codigo}`:** número, estado, horario, delivery o retiro, medio de pago, si la transferencia está confirmada y el total. Nunca nombre, teléfono, dirección, referencias ni aclaraciones (clase `SeguimientoPedido`).
+- **Qué devuelve `GET /api/seguimiento/{codigo}`:** número, estado, horario, medio de pago, si la transferencia está confirmada y el total. Nunca nombre, teléfono, dirección, referencias ni aclaraciones (clase `SeguimientoPedido`).
 - Un código mal escrito o inexistente responde siempre 404 igual. Límite: 30 consultas por minuto por IP (`Limites.PoliticaSeguimiento`); la página consulta 4 por minuto.
 - Si la transferencia no está confirmada, la página le recuerda al cliente que mande el comprobante por el chat de WhatsApp donde envió el pedido. Esto usa lo que se marca en el panel (ver arriba).
 - Los pedidos hechos antes de este cambio no tienen código ni página de seguimiento.
@@ -236,5 +259,4 @@ Pasos para cargar una foto:
 - Precios de los tacos (hoy son provisorios y no se muestran).
 - Confirmar con el cliente: "XL" en las hamburguesas grandes, que el Combo kids cheddar lleva gaseosa y si las XL incluyen papas o gaseosa.
 - Fotos que faltan: ver la tabla de "Fotos de los productos".
-- Ajustar con el local el cupo por horario y el horario de atención.
-- Número de WhatsApp, alias y titular reales: se cambian en `CONFIG` dentro de `wwwroot/js/app.js`.
+- Número de WhatsApp real: se cambia en `CONFIG` dentro de `wwwroot/js/app.js`. Cuando esté, borrar el aviso "Página en preparación" (`nota-demo` en `index.html`).

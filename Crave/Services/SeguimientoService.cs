@@ -31,7 +31,6 @@ public class SeguimientoService
             Numero = pedido.Numero,
             Estado = pedido.Estado,
             Hora = pedido.Hora,
-            Modo = pedido.Modo,
             Pago = pedido.Pago,
             PagoConfirmado = pedido.PagoConfirmadoEn != null,
             Total = pedido.Total
