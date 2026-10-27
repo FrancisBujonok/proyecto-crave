@@ -101,6 +101,10 @@ input { width: 100%; padding: 14px; font: inherit; color: var(--texto); backgrou
 .estado-local b { display: block; font-size: .9375rem; text-transform: uppercase; }
 .estado-local span { font-size: .8125rem; color: var(--apagado); }
 .estado-local .btn-chico { min-height: 44px; font-weight: 900; text-transform: uppercase; }
+/* Precios de lanzamiento: gris cuando están apagados, rojo cuando se están cobrando */
+.estado-promo { margin-top: 8px; border-color: var(--linea); }
+.estado-promo.activa { border-color: var(--rojo); }
+.estado-promo.activa .btn-chico { border-color: var(--rojo); }
 
 /* ---------- Formulario de horarios ---------- */
 .form-config { display: grid; gap: 14px; max-width: 520px; }

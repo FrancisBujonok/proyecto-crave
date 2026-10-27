@@ -13,6 +13,7 @@ public class Configuracion
     public int MinutosPorFranja { get; set; } = 15;      // un horario cada tantos minutos
     public int PedidosPorFranja { get; set; } = 4;       // cuántos pedidos aguanta la cocina por horario
     public int MinutosPagoDemorado { get; set; } = 20;   // una transferencia sin confirmar pasado este tiempo se marca "Pago demorado" en el panel
+    public bool PromoActiva { get; set; }                // true = se cobran los precios de lanzamiento (columna precio_promo de cada producto)
 }
 
 // Lo que manda el panel al guardar el formulario de horarios
@@ -27,3 +28,6 @@ public record CambioConfig(
 
 // Lo que manda el panel al tocar el botón "Abrir local" / "Cerrar local"
 public record CambioAbierto(bool Abierto);
+
+// Lo que manda el panel al tocar "Activar precios de lanzamiento" / "Volver a precios normales"
+public record CambioPromo(bool Activa);

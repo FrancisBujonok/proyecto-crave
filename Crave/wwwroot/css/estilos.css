@@ -28,6 +28,9 @@
   --corte-chico: 10px;  /* botones y etiquetas */
   --corte-mini: 7px;    /* controles chiquitos */
 
+  /* Estallido de historieta (16 puntas) para las etiquetas de descuento. Ver sección 13. */
+  --estallido: polygon(50.0% 0.0%, 57.6% 11.7%, 69.1% 3.8%, 71.7% 17.6%, 85.4% 14.6%, 82.4% 28.3%, 96.2% 30.9%, 88.3% 42.4%, 100.0% 50.0%, 88.3% 57.6%, 96.2% 69.1%, 82.4% 71.7%, 85.4% 85.4%, 71.7% 82.4%, 69.1% 96.2%, 57.6% 88.3%, 50.0% 100.0%, 42.4% 88.3%, 30.9% 96.2%, 28.3% 82.4%, 14.6% 85.4%, 17.6% 71.7%, 3.8% 69.1%, 11.7% 57.6%, 0.0% 50.0%, 11.7% 42.4%, 3.8% 30.9%, 17.6% 28.3%, 14.6% 14.6%, 28.3% 17.6%, 30.9% 3.8%, 42.4% 11.7%);
+
   --suave: cubic-bezier(.2, .8, .2, 1);   /* frena al final */
   --rebote: cubic-bezier(.3, 1.5, .5, 1); /* se pasa un poco y vuelve */
 
@@ -524,11 +527,71 @@ input:hover, select:hover, textarea:hover { border-color: var(--linea-fuerte); }
 .acciones-linea { display: flex; flex-wrap: wrap; gap: 8px; }
 .lineas-pedido .acciones-linea { grid-column: 1 / -1; }
 
+/* ---------- 13. PROMO DE LANZAMIENTO ----------
+   Todo esto aparece solo cuando los precios de lanzamiento están prendidos desde el panel
+   (app.js recibe precioAntes en cada producto). Con la promo apagada, la página queda como siempre. */
+
+/* Estallido rojo con una copia blanca corrida atrás: el mismo efecto de "dos tintas" de los dibujos y del sello.
+   El rojo y el blanco son dos pseudo-elementos recortados con la forma de --estallido; el texto va encima. */
+.estallido {
+  position: absolute; z-index: 1; isolation: isolate; display: grid; place-content: center; justify-items: center;
+  aspect-ratio: 1; color: #fff; text-align: center; line-height: .92; pointer-events: none;
+  font-family: var(--fuente-titulo); font-weight: 900; text-transform: uppercase;
+}
+.estallido::before, .estallido::after { content: ""; position: absolute; inset: 0; z-index: -1; clip-path: var(--estallido); }
+.estallido::before { background: var(--texto); transform: translate(3px, 3px); }   /* la copia blanca, corrida */
+.estallido::after { background: var(--rojo); }
+.estallido b { font-weight: 900; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.estallido small { font-weight: 900; letter-spacing: .08em; }
+
+/* En la tarjeta: esquina de arriba a la derecha (la etiqueta "Para 2" queda a la izquierda) */
+.oferta { top: 6px; right: 6px; width: 62px; transform: rotate(-12deg); transition: transform .3s var(--rebote); }
+.oferta b { font-size: 1.0625rem; }
+.oferta small { font-size: .5625rem; margin-top: 1px; }
+.tarjeta:hover .oferta { transform: rotate(0deg) scale(1.08); }
+
+/* En el sello de la portada: "Hasta 22% OFF", pegado arriba a la derecha como un sticker */
+.estallido-portada {
+  top: -2%; right: -4%; width: 38%; font-size: clamp(.6875rem, 3vw, .9375rem);
+  transform: rotate(12deg); animation: estallar .55s 1.15s var(--rebote) backwards;
+}
+.estallido-portada b { font-size: 2.05em; }
+.estallido-portada small { font-size: .8em; }
+.estallido-portada::before { transform: translate(4px, 4px); }
+
+/* Precio de antes tachado (raya roja) arriba del precio de hoy */
+.precios { display: grid; line-height: 1.1; }
+.precio-antes {
+  color: var(--apagado); font-size: .8125rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
+  text-decoration-line: line-through; text-decoration-color: var(--rojo); text-decoration-thickness: 2px;
+}
+.lineas-pedido .sub .precio-antes { font-size: inherit; }
+
+/* Frases de la promo en la cinta blanca */
+.cinta .cinta-promo { color: var(--rojo); }
+
+/* Nota debajo del total del cajón: cuánto se ahorra (es informativa, ya está descontado) */
+.ahorro { padding-top: 4px; color: var(--texto); font-size: .9375rem; }
+.ahorro b { font-weight: 800; white-space: nowrap; }
+
+/* ---------- 14. PRÓXIMAMENTE (los tacos) ----------
+   Franja gris cruzada sobre la imagen. El producto se ve pero no tiene botón para agregarlo. */
+.proximamente .arte > .icono, .proximamente .arte > .foto { filter: grayscale(1); opacity: .45; }
+.proximamente .nombre { color: var(--apagado); }
+.franja-pronto {
+  position: absolute; left: -15%; right: -15%; top: 50%; z-index: 1;
+  padding: 7px 0; background: var(--linea-fuerte); color: var(--texto); text-align: center;
+  font-family: var(--fuente-titulo); font-weight: 900; font-size: .8125rem; letter-spacing: .16em; text-transform: uppercase;
+  transform: translateY(-50%) rotate(-8deg); box-shadow: 0 0 0 2px var(--tarjeta);
+}
+.precio-pronto { color: var(--apagado); font-weight: 700; font-size: .9375rem; }
+
 /* ---------- ANIMACIONES ---------- */
 @keyframes deslizar { to { transform: translateX(-50%); } }
 @keyframes girar { to { transform: rotate(360deg); } }
 @keyframes subir { from { transform: translateY(105%); } }
 @keyframes aparecer { from { transform: scale(.55) rotate(-25deg); } }
+@keyframes estallar { from { transform: scale(0) rotate(-40deg); } }
 @keyframes trazo { to { stroke-dashoffset: 0; } }
 @keyframes caer { to { transform: translateY(620px) rotate(calc(var(--r) + 420deg)); opacity: 0; } }
 

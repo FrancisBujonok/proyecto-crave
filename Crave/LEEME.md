@@ -47,7 +47,10 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `Services/SeguimientoService.cs` | Busca un pedido por su código y devuelve solo lo que puede ver el cliente (`Models/Seguimiento.cs`). |
 | `wwwroot/seguimiento.html`, `css/seguimiento.css`, `js/seguimiento.js` | La página donde el cliente sigue su pedido. |
 | `wwwroot/img/productos/` | Fotos de los productos. |
-| `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (alitas, Familiar para 6, tacos). |
+| `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (Familiar para 6, tacos). |
+| `sql/08-lanzamiento.sql` | Precios reales y de lanzamiento, tacos "Próximamente" y el interruptor de la promo. Correrlo ANTES de subir el código de la semana de lanzamiento. |
+| `Services/Precios.cs` | La única regla de precios: qué se cobra (normal o de lanzamiento), qué se tacha y el porcentaje de descuento. |
+| `Services/ArmarCarta.cs` | Arma la carta que recibe la página (`Models/Carta.cs`) con los precios de hoy ya calculados. |
 | `wwwroot/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Ícono de la pestaña, del iPhone y de Android (la "A" roja del logo sobre negro). |
 | `wwwroot/img/og-crave.jpg` | Imagen que se ve al compartir el enlace en WhatsApp, Instagram o Facebook (1200 x 630). |
 
@@ -120,8 +123,24 @@ El plan gratuito de Render da 750 horas por mes entre todos los servicios gratui
 
 ## Cambiar la carta
 
-Se hace desde Supabase, sin tocar código: Table Editor -> `productos`. Para marcar algo como agotado, poné `agotado` en true. Para cambiar un precio, editá `precio`. Los cambios se ven al recargar la página.
-Los precios de `sql/02-menu-real.sql` son provisorios.
+Se hace desde Supabase, sin tocar código: Table Editor -> `productos`. Para marcar algo como agotado, poné `agotado` en true (o usá el panel). Para cambiar un precio, editá `precio` (normal) o `precio_promo` (lanzamiento). Los cambios se ven al recargar la página.
+Los precios son los de la lista del cliente del 27/10/2026 (`sql/08-lanzamiento.sql`).
+
+## Semana de lanzamiento (precios de lanzamiento)
+
+Cada producto tiene dos precios: `precio` (el normal) y `precio_promo` (el de lanzamiento; vacío = sin promo).
+Cuál se cobra lo decide un solo interruptor: `configuracion.promo_activa`, que se prende y se apaga desde el panel
+con el cartel "Precios de lanzamiento" (se ve en todas las pestañas). Empieza apagado.
+
+Con la promo **prendida**:
+- `/api/menu` manda `precio` = el de lanzamiento, `precioAntes` = el normal y `descuento` = el porcentaje (redondeado para abajo, para no prometer de más). Lo arma `Services/ArmarCarta.cs` con la regla de `Services/Precios.cs`.
+- La tienda muestra el precio normal tachado, un estallido rojo con el porcentaje en cada tarjeta, la cinta con "Semana de lanzamiento / Precios de apertura / Hasta X% OFF", un estallido "Hasta X% OFF" en el sello de la portada y, en el cajón, cuánto se ahorra.
+- `PedidoService` cobra el precio de lanzamiento y lo guarda en cada renglón (`pedido_items.precio`).
+
+Con la promo **apagada** la página se ve como siempre y se cobra el precio normal. No hace falta borrar nada para terminar la promo.
+Los textos de la cinta están en `CONFIG.promo` de `wwwroot/js/app.js`. La base no acepta un `precio_promo` mayor o igual que el normal (regla `precio_promo_valido`).
+
+**Tacos "Próximamente":** la columna `proximamente` muestra el producto con una franja gris y sin botón para agregarlo; el servidor también lo rechaza. Cuando salgan los tacos: cargar sus precios reales y correr `update productos set proximamente = false where categoria_id = 'tacos';`.
 
 ## Gaseosas a elección
 
@@ -179,13 +198,10 @@ Para que funcione hay que correr una vez `sql/06-seguimiento.sql` en Supabase, A
 
 Cada producto tiene una columna `imagen` en la tabla `productos` (la ruta del archivo dentro de `wwwroot`). Si está vacía, la tarjeta muestra un dibujo provisorio. Si la ruta existe pero el archivo no carga, también se muestra el dibujo (`app.js`, escuchador de "error"): nunca queda una imagen rota.
 
-Faltan 8 fotos. Las de alitas y la del Familiar para 6 son las que importan ahora; los tacos están como agotados y pueden esperar.
+Faltan 5 fotos. La del Familiar para 6 es la que importa ahora; los tacos están como "Próximamente" y pueden esperar. (Las alitas salieron de la carta.)
 
 | Producto (id) | Archivo que hay que crear en `wwwroot/img/productos/` |
 |---|---|
-| 6 alitas + papas (`ind-alitas6`) | `alitas-individual.jpg` |
-| Para 2: alitas (`cmp-alitas10`) | `alitas-2-personas.jpg` |
-| Para 3: alitas (`cmp-alitas15`) | `alitas-3-personas.jpg` |
 | Familiar para 6 (`fam-6`) | `familiar-6.jpg` |
 | Taco de pollo crispy (`tac-pollo`) | `taco-pollo.jpg` |
 | Taco de carne (`tac-carne`) | `taco-carne.jpg` |
@@ -217,7 +233,8 @@ Pasos para cargar una foto:
 
 ## Pendiente
 
-- Precios reales (hoy son provisorios).
+- Precios de los tacos (hoy son provisorios y no se muestran).
+- Confirmar con el cliente: "XL" en las hamburguesas grandes, que el Combo kids cheddar lleva gaseosa y si las XL incluyen papas o gaseosa.
 - Fotos que faltan: ver la tabla de "Fotos de los productos".
 - Ajustar con el local el cupo por horario y el horario de atención.
 - Número de WhatsApp, alias y titular reales: se cambian en `CONFIG` dentro de `wwwroot/js/app.js`.

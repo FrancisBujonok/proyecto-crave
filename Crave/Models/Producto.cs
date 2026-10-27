@@ -8,11 +8,16 @@ public class Producto
     public string CategoriaId { get; set; } = "";   // a qué categoría pertenece (clave foránea)
     public string Nombre { get; set; } = "";
     public string Descripcion { get; set; } = "";
-    public int Precio { get; set; }                 // en pesos, sin decimales
+    public int Precio { get; set; }                 // precio normal, en pesos, sin decimales
+
+    // Precio de lanzamiento (o de cualquier promo). null = este producto no tiene precio de promo.
+    // Solo se cobra cuando la promo está prendida desde el panel (Configuracion.PromoActiva). La regla está en Services/Precios.cs.
+    public int? PrecioPromo { get; set; }
     public string? Icono { get; set; }              // dibujo provisorio hasta tener fotos
     public string? Imagen { get; set; }             // ruta de la foto dentro de wwwroot, ej.: "img/combo-4.png"
     public string? Etiqueta { get; set; }           // cartelito sobre la tarjeta, ej.: "Para 2"
     public bool Agotado { get; set; }
+    public bool Proximamente { get; set; }          // true = se ve con la franja "Próximamente" y todavía no se puede pedir (ej.: los tacos)
     public bool Destacado { get; set; }             // true = aparece también en la fila de Combos
     public int Orden { get; set; }                  // para ordenar dentro de la categoría
 

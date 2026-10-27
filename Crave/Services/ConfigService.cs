@@ -26,12 +26,7 @@ public class ConfigService : IConfigService
         var errores = ConfigReglas.Validar(cambio);
         if (errores.Count > 0) return errores;
 
-        var fila = await _db.Configuraciones.FirstOrDefaultAsync(c => c.Id == 1);
-        if (fila == null)
-        {
-            fila = new Configuracion { Id = 1 };
-            _db.Configuraciones.Add(fila);
-        }
+        var fila = await FilaParaEditar();
 
         string mensaje = (cambio.MensajeCerrado ?? "").Trim();
         fila.MensajeCerrado = mensaje == "" ? null : mensaje;
@@ -50,13 +45,29 @@ public class ConfigService : IConfigService
     // Abre o cierra el local sin tocar el resto de la configuración
     public async Task CambiarAbierto(bool abierto)
     {
+        var fila = await FilaParaEditar();
+        fila.LocalAbierto = abierto;
+        await _db.SaveChangesAsync();
+    }
+
+    // Prende o apaga los precios de lanzamiento sin tocar el resto de la configuración.
+    // Rige desde el próximo pedido: la carta y el cálculo del total leen este valor cada vez.
+    public async Task CambiarPromo(bool activa)
+    {
+        var fila = await FilaParaEditar();
+        fila.PromoActiva = activa;
+        await _db.SaveChangesAsync();
+    }
+
+    // La fila de configuración lista para cambiarla. Si todavía no existe, la crea (se guarda con SaveChangesAsync).
+    async Task<Configuracion> FilaParaEditar()
+    {
         var fila = await _db.Configuraciones.FirstOrDefaultAsync(c => c.Id == 1);
         if (fila == null)
         {
             fila = new Configuracion { Id = 1 };
             _db.Configuraciones.Add(fila);
         }
-        fila.LocalAbierto = abierto;
-        await _db.SaveChangesAsync();
+        return fila;
     }
 }

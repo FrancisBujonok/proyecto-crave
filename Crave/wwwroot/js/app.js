@@ -14,7 +14,14 @@ const paginaAbiertaEn = Date.now();   // para el antispam: el servidor mira cuá
 const CONFIG = {
   whatsapp: "5490000000000",          // ejemplo: reemplazar por el número real. Formato: 54 + 9 + código de área sin 0 + número sin 15 (ej.: 5493493123456)
   alias: "CRAVE.PEDIDOS.EJEMPLO",
-  titular: "Titular de ejemplo"
+  titular: "Titular de ejemplo",
+
+  // Textos de la promo. Solo se ven cuando está prendida desde el panel ("Activar precios de lanzamiento").
+  // Los precios NO están acá: salen de la base (columna precio_promo) y los calcula el servidor.
+  promo: {
+    nombre: "precios de lanzamiento",                          // se usa en el resumen: "Ahorrás con precios de lanzamiento"
+    cinta: ["Semana de lanzamiento", "Precios de apertura"]    // frases en rojo en la cinta blanca (después va "Hasta X% OFF")
+  }
 };
 
 // Solo para el modo demo: imita lo que hace HorarioService.cs en el servidor.
@@ -34,6 +41,7 @@ let selector = null;     // lo que se está eligiendo en la ventana de gaseosas:
 let franjas = [];        // horarios de hoy: [{ hora: "21:15", libres: 3 }, ...]
 let franjasError = "";  // texto para mostrar si no hay horarios o no se pudieron cargar
 let localCerrado = false;  // true cuando el dueño cerró el local desde el panel
+let promoActiva = false;   // true cuando los precios de lanzamiento están prendidos (lo dice /api/menu)
 let quienAbrio = null;   // botón que abrió el cajón, para devolverle el foco al cerrar
 
 // ---------- 3. AYUDANTES ----------
@@ -61,10 +69,20 @@ function anunciar(texto) { $("#aviso").textContent = texto; }
 // ¿Este producto lleva gaseosas a elegir? (lo define la columna gaseosas_a_elegir de la base)
 function tieneOpciones(p) { return (p.gaseosasAElegir || 0) > 0; }
 
-// Las gaseosas que se pueden elegir hoy: los productos de la categoría "bebidas" que no están agotados
+// ¿Se puede pedir hoy? No, si está agotado o si todavía es "Próximamente" (los tacos)
+function sePuedePedir(p) { return !p.agotado && !p.proximamente; }
+
+// Las gaseosas que se pueden elegir hoy: los productos de la categoría "bebidas" que se pueden pedir
 function gaseosasDisponibles() {
   const bebidas = menu.categorias.find(c => c.id === "bebidas");
-  return bebidas ? bebidas.productos.filter(p => !p.agotado) : [];
+  return bebidas ? bebidas.productos.filter(sePuedePedir) : [];
+}
+
+// El mayor descuento de la carta, para "Hasta 22% OFF". 0 si no hay promo.
+function mayorDescuento() {
+  let mayor = 0;
+  menu.categorias.forEach(c => c.productos.forEach(p => { if (p.descuento > mayor) mayor = p.descuento; }));
+  return mayor;
 }
 
 // [coca, coca, sprite] -> "2 × Coca-Cola, 1 × Sprite". Con una sola gaseosa: solo el nombre.
@@ -99,15 +117,34 @@ function dibujarFilas() {
   $("#filas").innerHTML = html;
 }
 
-// Cinta blanca: el mismo grupo dos veces para que el loop no tenga saltos
+// Cinta blanca: el mismo grupo dos veces para que el loop no tenga saltos.
+// Con la promo prendida, arranca con las frases de lanzamiento en rojo.
 function dibujarCinta() {
-  const frases = ["Pollo frito crocante", "Tacos", "Delivery en Sunchales", "Transferencia o efectivo", "Feed the craving"];
+  const comunes = ["Pollo frito crocante", "Delivery en Sunchales", "Transferencia o efectivo", "Feed the craving"];
+  let frases = comunes.map(texto => ({ texto: texto, promo: false }));
+  if (promoActiva) {
+    const promo = CONFIG.promo.cinta.slice();
+    if (mayorDescuento() > 0) promo.push("Hasta " + mayorDescuento() + "% OFF");
+    frases = promo.map(texto => ({ texto: texto, promo: true })).concat(frases);
+  }
   let grupo = '<div class="cinta-grupo">';
   frases.concat(frases).forEach(frase => {
-    grupo += "<span>" + frase + '</span><svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>';
+    grupo += '<span' + (frase.promo ? ' class="cinta-promo"' : "") + ">" + esc(frase.texto) + "</span>"
+      + '<svg class="chev" aria-hidden="true"><use href="#i-a"/></svg>';
   });
   grupo += "</div>";
   $("#cinta").innerHTML = grupo + grupo;
+}
+
+// El sello de la portada lleva un estallido rojo "Hasta 22% OFF" mientras dura la promo
+function dibujarPromoPortada() {
+  const mayor = mayorDescuento();
+  const hay = promoActiva && mayor > 0;
+  $("#estallido-portada").hidden = !hay;
+  $("#promo-portada").hidden = !hay;
+  if (!hay) return;
+  $("#estallido-numero").textContent = mayor + "%";
+  $("#promo-portada").textContent = "Semana de lanzamiento: hasta " + mayor + "% de descuento en la carta.";
 }
 
 function dibujarPastillas() {
@@ -132,15 +169,22 @@ function tarjetaHTML(p) {
     ? '<img class="foto" src="' + esc(p.imagen) + '" data-icono="' + esc(p.icono || "") + '" alt="' + esc(p.nombre) + '" width="400" height="300" loading="lazy">'
     : icono(p.icono);
   const etiqueta = p.etiqueta ? '<span class="etiqueta">' + esc(p.etiqueta) + "</span>" : "";
+  // Estallido rojo con el descuento (esquina de arriba a la derecha). Solo si hoy tiene precio tachado.
+  // Es decorativo (aria-hidden): el lector de pantalla ya lee "Antes... Ahora..." en el precio.
+  const oferta = p.precioAntes
+    ? '<span class="estallido oferta" aria-hidden="true"><b>' + p.descuento + '%</b><small>OFF</small></span>'
+    : "";
+  const pronto = p.proximamente ? '<span class="franja-pronto">Próximamente</span>' : "";
+  const clases = ["tarjeta", p.agotado ? "agotado" : "", p.proximamente ? "proximamente" : ""].join(" ").trim();
   return `
     <li class="reveal">
-      <article class="tarjeta ${p.agotado ? "agotado" : ""}">
-        <div class="arte">${arte}${etiqueta}</div>
+      <article class="${clases}">
+        <div class="arte">${arte}${etiqueta}${oferta}${pronto}</div>
         <div class="cuerpo-tarjeta">
           <h3 class="nombre">${esc(p.nombre)}</h3>
           <p class="desc">${esc(p.descripcion)}</p>
           <div class="pie-tarjeta">
-            <span class="precio">${dinero.format(p.precio)}</span>
+            ${precioHTML(p)}
             <div class="control" data-id="${p.id}">${controlHTML(p.id)}</div>
           </div>
         </div>
@@ -148,10 +192,22 @@ function tarjetaHTML(p) {
     </li>`;
 }
 
+// El precio de la tarjeta. Con promo: el de antes tachado arriba y el de hoy abajo.
+// <s> no lo anuncian todos los lectores de pantalla, por eso va el texto escondido "Antes" / "Ahora".
+function precioHTML(p) {
+  if (p.proximamente) return '<span class="precio-pronto">Muy pronto</span>';   // los tacos todavía no tienen precio real
+  if (!p.precioAntes) return '<span class="precio">' + dinero.format(p.precio) + "</span>";
+  return '<span class="precios">'
+    + '<s class="precio-antes"><span class="sr">Antes </span>' + dinero.format(p.precioAntes) + "</s>"
+    + '<span class="precio"><span class="sr">Ahora </span>' + dinero.format(p.precio) + "</span>"
+    + "</span>";
+}
+
 // El botón "+" o, si ya hay unidades en el pedido, el selector de cantidad
 function controlHTML(id) {
   const p = productos[id];
   const cantidad = cantidadDe(id);
+  if (p.proximamente) return "";   // la franja "Próximamente" ya lo dice
   if (p.agotado) return '<span class="chip-agotado">Agotado</span>';
   if (cantidad === 0) {
     return '<button type="button" class="mas" data-accion="sumar" data-id="' + id + '" aria-label="Agregar ' + esc(p.nombre) + '">' + iconoChico("mas") + "</button>";
@@ -284,18 +340,18 @@ function leerCarrito() {
   try {
     const guardado = JSON.parse(localStorage.getItem("crave_carrito_v2") || "{}");
 
-    // Productos comunes: solo recuperamos los que todavía existen y no están agotados
+    // Productos comunes: solo recuperamos los que todavía existen y se pueden pedir
     const simples = guardado.simples || {};
     for (const id in simples) {
       const p = productos[id];
-      if (p && !p.agotado && !tieneOpciones(p) && simples[id] > 0) carrito[id] = Math.min(simples[id], MAXIMO_POR_PRODUCTO);
+      if (p && sePuedePedir(p) && !tieneOpciones(p) && simples[id] > 0) carrito[id] = Math.min(simples[id], MAXIMO_POR_PRODUCTO);
     }
 
     // Combos con gaseosas: recuperamos los que siguen siendo válidos (producto vigente y gaseosas disponibles)
     const disponibles = gaseosasDisponibles().map(g => g.id);
     (guardado.combos || []).forEach(c => {
       const p = productos[c.id];
-      if (!p || p.agotado || !tieneOpciones(p)) return;
+      if (!p || !sePuedePedir(p) || !tieneOpciones(p)) return;
       if (!Array.isArray(c.gaseosas) || c.gaseosas.length !== p.gaseosasAElegir) return;
       if (!c.gaseosas.every(g => disponibles.includes(g))) return;
       combos.push({ uid: siguienteUid++, id: c.id, gaseosas: c.gaseosas });
@@ -314,6 +370,16 @@ function calcularSubtotal() {
   for (const id in carrito) total += productos[id].precio * carrito[id];
   combos.forEach(c => { total += productos[c.id].precio; });
   return total;
+}
+
+// Cuánto se ahorra el cliente con la promo (precio de antes menos precio de hoy). Es solo para mostrar:
+// el subtotal ya está calculado con los precios de hoy.
+function calcularAhorro() {
+  const ahorroDe = p => (p.precioAntes ? p.precioAntes - p.precio : 0);
+  let ahorro = 0;
+  for (const id in carrito) ahorro += ahorroDe(productos[id]) * carrito[id];
+  combos.forEach(c => { ahorro += ahorroDe(productos[c.id]); });
+  return ahorro;
 }
 
 function modoEntrega() { return $("#formulario").elements.modo.value; }          // "delivery" o "retiro"
@@ -529,7 +595,7 @@ function actualizarTodo() {
     const p = productos[id];
     lineas += `
       <li>
-        <div><b>${esc(p.nombre)}</b><div class="sub">${dinero.format(p.precio)} c/u</div></div>
+        <div><b>${esc(p.nombre)}</b><div class="sub">${p.precioAntes ? '<s class="precio-antes">' + dinero.format(p.precioAntes) + "</s> " : ""}${dinero.format(p.precio)} c/u</div></div>
         <div class="importe">${dinero.format(p.precio * carrito[id])}</div>
         <div class="cantidad" role="group" aria-label="Cantidad de ${esc(p.nombre)}">
           <button type="button" data-accion="restar" data-id="${id}" aria-label="Quitar una unidad de ${esc(p.nombre)}">${iconoChico("menos")}</button>
@@ -553,10 +619,12 @@ function actualizarTodo() {
   });
   $("#lineas").innerHTML = lineas;
 
+  const ahorro = calcularAhorro();
   $("#resumen").innerHTML = `
     <div><span>Subtotal</span><span>${dinero.format(subtotal)}</span></div>
     <div><span>Envío</span><span>${entrega ? (zonaElegida() ? dinero.format(envio) : "Elegí tu zona") : "Retiro sin costo"}</span></div>
-    <div class="total"><span>Total</span><span>${dinero.format(total)}</span></div>`;
+    <div class="total"><span>Total</span><span>${dinero.format(total)}</span></div>
+    ${ahorro > 0 ? '<p class="ahorro">Con ' + esc(CONFIG.promo.nombre) + " te ahorrás <b>" + dinero.format(ahorro) + "</b>.</p>" : ""}`;
   $("#total-pie").textContent = dinero.format(total);
   $("#pago-importe").textContent = dinero.format(total);
 }
@@ -1016,6 +1084,9 @@ async function iniciar() {
     return;
   }
   menu.categorias.forEach(c => c.productos.forEach(p => { productos[p.id] = p; }));
+  promoActiva = menu.promoActiva === true;
+  dibujarCinta();          // de nuevo, ahora que sabemos si hay promo
+  dibujarPromoPortada();
   leerCarrito();
 
   dibujarPastillas();

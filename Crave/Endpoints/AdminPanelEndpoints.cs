@@ -39,6 +39,13 @@ public static class AdminPanelEndpoints
             return Results.Ok(new { ok = true });
         });
 
+        // Prender o apagar los precios de lanzamiento. Body: { "activa": true }
+        admin.MapPatch("/configuracion/promo", async (CambioPromo cambio, IConfigService config) =>
+        {
+            await config.CambiarPromo(cambio.Activa);
+            return Results.Ok(new { ok = true });
+        });
+
         // Lista de productos para marcar agotados
         admin.MapGet("/productos", async (IAdminService servicio) =>
             Results.Ok(await servicio.Productos()));

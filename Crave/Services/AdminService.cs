@@ -96,7 +96,9 @@ public class AdminService : IAdminService
                     Nombre = producto.Nombre,
                     Categoria = categoria.Nombre,
                     Precio = producto.Precio,
-                    Agotado = producto.Agotado
+                    PrecioPromo = producto.PrecioPromo,
+                    Agotado = producto.Agotado,
+                    Proximamente = producto.Proximamente
                 });
             }
         }

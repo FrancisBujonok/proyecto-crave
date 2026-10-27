@@ -178,6 +178,7 @@ async function cargarConfig(llenarFormulario = false) {
   if (!ok) throw new Error("fallo");
   config = datos;
   dibujarEstadoLocal();
+  dibujarEstadoPromo();
   if (llenarFormulario) llenarFormularioConfig();
 }
 
@@ -395,6 +396,21 @@ function dibujarEstadoLocal() {
     '<button type="button" class="btn-chico" data-accion="local" data-abierto="' + (!abierto) + '">' + (abierto ? 'Cerrar local' : 'Abrir local') + '</button>';
 }
 
+// Cartel de los precios de lanzamiento, debajo del de abierto/cerrado. Un toque los prende o los apaga.
+// Prendidos: la tienda muestra el precio de antes tachado, la etiqueta de descuento y la cinta de lanzamiento,
+// y el servidor cobra el precio de lanzamiento (columna precio_promo).
+function dibujarEstadoPromo() {
+  const caja = $("estado-promo");
+  caja.hidden = config === null;
+  if (config === null) return;
+  const activa = config.promoActiva === true;
+  caja.classList.toggle("activa", activa);
+  caja.innerHTML =
+    '<div><b>' + (activa ? 'Precios de lanzamiento activados' : 'Precios normales') + '</b>' +
+    '<span>' + (activa ? 'Los clientes ven los descuentos y pagan el precio de lanzamiento.' : 'Los clientes pagan el precio normal. Los de lanzamiento están cargados, listos para activar.') + '</span></div>' +
+    '<button type="button" class="btn-chico" data-accion="promo" data-activa="' + (!activa) + '">' + (activa ? 'Volver a precios normales' : 'Activar precios de lanzamiento') + '</button>';
+}
+
 function llenarFormularioConfig() {
   $("c-apertura").value = config.apertura;
   $("c-ultima").value = config.ultimaFranja;
@@ -437,6 +453,14 @@ $("form-config").addEventListener("submit", async (evento) => {
 
 // ---------- Dibujar productos ----------
 
+// Debajo del nombre: precio normal y, si tiene, el de lanzamiento. Los tacos dicen "Próximamente".
+function precioProducto(p) {
+  let texto = plata(p.precio);
+  if (p.precioPromo) texto += ' · lanzamiento ' + plata(p.precioPromo);
+  if (p.proximamente) texto += ' · Próximamente (no se puede pedir)';
+  return '<span class="producto-precio">' + texto + '</span>';
+}
+
 function dibujarProductos() {
   // Agrupamos por categoría respetando el orden en que llegan
   const grupos = new Map();
@@ -449,7 +473,7 @@ function dibujarProductos() {
   grupos.forEach((lista, categoria) => {
     html += '<div class="grupo"><h2>' + esc(categoria) + '</h2>' + lista.map(p =>
       '<div class="producto' + (p.agotado ? ' agotado' : '') + '">' +
-      '<span class="producto-nombre">' + esc(p.nombre) + '<span class="producto-precio">' + plata(p.precio) + '</span></span>' +
+      '<span class="producto-nombre">' + esc(p.nombre) + precioProducto(p) + '</span>' +
       '<button type="button" class="interruptor" role="switch" aria-checked="' + p.agotado + '" aria-label="Agotado: ' + esc(p.nombre) + '" ' +
       'data-accion="agotado" data-id="' + esc(p.id) + '" data-agotado="' + (!p.agotado) + '">' + (p.agotado ? 'Agotado' : 'Disponible') + '</button>' +
       '</div>'
@@ -490,6 +514,13 @@ function pedirSegundoToque(accion, id) {
 async function cambiarAbierto(abierto) {
   const { ok, datos } = await api("/configuracion/abierto", "PATCH", { abierto });
   if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar el estado del local.");
+  await cargarConfig(false);
+}
+
+// Prende (activa = true) o apaga los precios de lanzamiento
+async function cambiarPromo(activa) {
+  const { ok, datos } = await api("/configuracion/promo", "PATCH", { activa });
+  if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar los precios.");
   await cargarConfig(false);
 }
 
@@ -556,6 +587,10 @@ $("panel").addEventListener("click", async (evento) => {
       ocupado = true;
       mostrarAviso("");
       await cambiarAbierto(boton.dataset.abierto === "true");
+    } else if (accion === "promo") {
+      ocupado = true;
+      mostrarAviso("");
+      await cambiarPromo(boton.dataset.activa === "true");
     } else if (accion === "agotado") {
       ocupado = true;
       mostrarAviso("");

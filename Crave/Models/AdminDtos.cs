@@ -47,8 +47,10 @@ public class ProductoAdmin
     public string Id { get; set; } = "";
     public string Nombre { get; set; } = "";
     public string Categoria { get; set; } = "";
-    public int Precio { get; set; }
+    public int Precio { get; set; }            // precio normal
+    public int? PrecioPromo { get; set; }      // precio de lanzamiento (null = no tiene)
     public bool Agotado { get; set; }
+    public bool Proximamente { get; set; }
 }
 
 // Resultado de un cambio: Ok = salió bien. Si no, Codigo es el número HTTP (404, 409...) y Mensaje explica por qué.

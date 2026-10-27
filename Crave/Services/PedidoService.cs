@@ -7,15 +7,24 @@ namespace Crave.Services;
 // Acá vive la lógica del pedido. La regla es simple: el navegador pide, el servidor decide.
 // Los precios se buscan siempre en la base de datos y los totales se calculan en C#,
 // así nadie puede cambiar un precio desde el navegador.
+// Qué precio se cobra (normal o de lanzamiento) lo decide Precios.Cobrar, según el interruptor del panel.
 public class PedidoService
 {
     private readonly CraveDb _db;
     private readonly HorarioService _horarios;
+    private readonly IConfigService _config;
 
-    public PedidoService(CraveDb db, HorarioService horarios)
+    public PedidoService(CraveDb db, HorarioService horarios, IConfigService config)
     {
         _db = db;
         _horarios = horarios;
+        _config = config;
+    }
+
+    // ¿Están prendidos los precios de lanzamiento? Se pregunta en cada pedido, así el cambio en el panel rige enseguida.
+    async Task<bool> PromoActiva()
+    {
+        return (await _config.Obtener()).PromoActiva;
     }
 
     // Trae de la base los productos que pidió el cliente. Devuelve un diccionario: id -> producto.
@@ -84,14 +93,14 @@ public class PedidoService
         return string.Join(", ", partes);
     }
 
-    static int CalcularSubtotal(PedidoNuevo pedido, Dictionary<string, Producto> productos)
+    static int CalcularSubtotal(PedidoNuevo pedido, Dictionary<string, Producto> productos, bool promoActiva)
     {
         int subtotal = 0;
         foreach (var item in pedido.Items)
         {
             if (productos.TryGetValue(item.ProductoId, out var producto))
             {
-                subtotal += producto.Precio * item.Cantidad;
+                subtotal += Precios.Cobrar(producto, promoActiva) * item.Cantidad;
             }
         }
         return subtotal;
@@ -108,6 +117,7 @@ public class PedidoService
         var gaseosas = await BuscarGaseosas();
         var zona = await BuscarZona(pedido);
         bool abierto = await _horarios.LocalAbierto();
+        bool promoActiva = await PromoActiva();
 
         if (pedido.Nombre.Trim().Length < 3)
             errores.Add("Escribí tu nombre y apellido.");
@@ -136,7 +146,9 @@ public class PedidoService
                 continue;   // sin producto no hay nada más que revisar en este renglón
             }
 
-            if (producto.Agotado)
+            if (producto.Proximamente)
+                errores.Add(producto.Nombre + " todavía no está a la venta.");
+            else if (producto.Agotado)
                 errores.Add(producto.Nombre + " está agotado.");
 
             // Las gaseosas solo se revisan si la cantidad es razonable (evita cuentas con números enormes)
@@ -183,7 +195,7 @@ public class PedidoService
                 errores.Add("Ya tenés " + PedidoReglas.MaxPedidosActivosPorTelefono + " pedidos en curso con ese teléfono. Esperá a recibirlos o escribinos por WhatsApp.");
         }
 
-        int total = CalcularSubtotal(pedido, productos) + (zona?.Costo ?? 0);
+        int total = CalcularSubtotal(pedido, productos, promoActiva) + (zona?.Costo ?? 0);
         if (pedido.Pago == "efectivo" && pedido.AbonaCon > 0 && pedido.AbonaCon < total)
             errores.Add("Con lo que abonás no alcanza para cubrir el total.");
 
@@ -197,8 +209,9 @@ public class PedidoService
         var productos = await BuscarProductos(pedido);
         var gaseosas = await BuscarGaseosas();
         var zona = await BuscarZona(pedido);
+        bool promoActiva = await PromoActiva();
 
-        int subtotal = CalcularSubtotal(pedido, productos);
+        int subtotal = CalcularSubtotal(pedido, productos, promoActiva);
         int envio = zona?.Costo ?? 0;
         int total = subtotal + envio;
 
@@ -244,7 +257,7 @@ public class PedidoService
                 ProductoId = producto.Id,
                 Nombre = producto.Nombre,
                 Cantidad = item.Cantidad,
-                Precio = producto.Precio,
+                Precio = Precios.Cobrar(producto, promoActiva),   // se guarda el precio que se cobró (con o sin promo)
                 Detalle = ArmarDetalle(item.Gaseosas, gaseosas)   // null si el producto no lleva gaseosas a elegir
             });
         }

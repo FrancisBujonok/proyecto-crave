@@ -43,15 +43,18 @@ app.UseDefaultFiles();   // sirve wwwroot/index.html cuando se entra a "/"
 app.UseStaticFiles();    // sirve css, js e imágenes de la carpeta wwwroot
 
 // La página pide la carta acá. Sale de las tablas categorias, productos y zonas.
-app.MapGet("/api/menu", async (CraveDb db) =>
+// Los precios salen ya calculados: si los precios de lanzamiento están prendidos en el panel, "precio" es el de
+// lanzamiento y "precioAntes" el normal (para mostrarlo tachado). La regla está en Services/Precios.cs.
+app.MapGet("/api/menu", async (CraveDb db, IConfigService config) =>
 {
     var categorias = await db.Categorias
         .Include(c => c.Productos.OrderBy(p => p.Orden))   // trae también los productos de cada categoría
         .OrderBy(c => c.Orden)
         .ToListAsync();
     var zonas = await db.Zonas.OrderBy(z => z.Id).ToListAsync();
+    bool promoActiva = (await config.Obtener()).PromoActiva;
 
-    return new { categorias, zonas };
+    return ArmarCarta.Desde(categorias, zonas, promoActiva);
 }).RequireRateLimiting(Limites.PoliticaLectura);
 
 // Para monitores externos (UptimeRobot, etc.): responde 200 si el servidor y la base funcionan, 503 si la base falla.
