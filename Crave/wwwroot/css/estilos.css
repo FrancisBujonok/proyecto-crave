@@ -303,7 +303,7 @@ body::after {
 /* La descripción se muestra completa (sin cortar con "..."): son textos cortos y en el celular
    es la única forma de leer los ingredientes. Las tarjetas de una misma fila quedan de la misma altura igual. */
 .desc { color: var(--apagado); font-size: .875rem; text-wrap: pretty; }
-/* "Incluye papas + gaseosa": cartelito discreto con una raya roja a la izquierda */
+/* "Incluye gaseosa" / "Incluye 4 gaseosas": cartelito discreto con una raya roja a la izquierda */
 .incluye {
   align-self: flex-start; padding: 3px 8px; background: var(--tarjeta-2); box-shadow: inset 3px 0 0 var(--rojo);
   color: var(--apagado); font-size: .75rem; font-weight: 600; line-height: 1.35;

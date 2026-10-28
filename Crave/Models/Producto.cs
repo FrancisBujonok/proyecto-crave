@@ -16,7 +16,6 @@ public class Producto
     public string? Icono { get; set; }              // dibujo provisorio hasta tener fotos
     public string? Imagen { get; set; }             // ruta de la foto dentro de wwwroot, ej.: "img/combo-4.png"
     public string? Etiqueta { get; set; }           // cartelito sobre la tarjeta, ej.: "Para 2"
-    public string? Incluye { get; set; }            // lo que viene con el producto, ej.: "2 papas + 2 gaseosas". null = nada (papas, aros, bebidas...)
     public bool Agotado { get; set; }
     public bool Proximamente { get; set; }          // true = se ve con la franja "Próximamente" y todavía no se puede pedir (ej.: los tacos)
     public bool Destacado { get; set; }             // true = aparece también en la fila de Combos

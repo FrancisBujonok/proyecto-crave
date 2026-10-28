@@ -50,7 +50,8 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (hoy solo faltan los tacos). |
 | `sql/08-lanzamiento.sql` | Precios reales y de lanzamiento, tacos "Próximamente" y el interruptor de la promo. Correrlo ANTES de subir el código de la semana de lanzamiento. |
 | `sql/09-envios-y-horarios.sql` | Carga los barrios con su costo de envío y deja los horarios de 20:00 a 22:30, cada 30 minutos, 5 pedidos por horario. |
-| `sql/10-incluye-y-fotos.sql` | Agrega la columna `incluye` ("Incluye papas + gaseosa" en las tarjetas), gaseosas a elección en combos y hamburguesas, y la foto del Familiar para 6. Correrlo ANTES de subir el código. |
+| `sql/10-incluye-y-fotos.sql` | Gaseosas a elección en combos y hamburguesas, y la foto del Familiar para 6. (También creaba la columna `incluye`, que ya no se usa: la borra el 11.) |
+| `sql/11-descripciones-sin-gaseosa.sql` | Saca la gaseosa de las descripciones (ahora la dice el cartelito) y borra la columna `incluye`. Correrlo DESPUÉS de subir el código. |
 | `Services/Precios.cs` | La única regla de precios: qué se cobra (normal o de lanzamiento), qué se tacha y el porcentaje de descuento. |
 | `Services/ArmarCarta.cs` | Arma la carta que recibe la página (`Models/Carta.cs`) con los precios de hoy ya calculados. |
 | `wwwroot/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Ícono de la pestaña, del iPhone y de Android (la "A" roja del logo sobre negro). |
@@ -172,11 +173,11 @@ Los textos de la cinta están en `CONFIG.promo` de `wwwroot/js/app.js`. La base 
 
 **Tacos "Próximamente":** la columna `proximamente` muestra el producto con una franja gris y sin botón para agregarlo; el servidor también lo rechaza. Cuando salgan los tacos: cargar sus precios reales y correr `update productos set proximamente = false where categoria_id = 'tacos';`.
 
-## Qué incluye cada producto
+## Cartelito "Incluye gaseosa"
 
-En el celular la descripción de la tarjeta se corta en dos líneas, así que lo que viene incluido se muestra aparte, en un cartelito arriba de la descripción: "Incluye papas + gaseosa".
-Sale de la columna `incluye` de `productos` (texto en minúscula, ej.: `2 papas + 2 gaseosas`). Vacía = no se muestra (popcrave, papas con cheddar, aros, bebidas, tacos).
-Se cambia desde Supabase -> Table Editor -> `productos`. Si un producto pasa a llevar gaseosa, cambiá también `gaseosas_a_elegir` para que el cliente la elija.
+Los productos que traen gaseosa muestran arriba de la descripción un cartelito: "Incluye gaseosa" o "Incluye 4 gaseosas".
+No se carga a mano: sale de la columna `gaseosas_a_elegir` (0 = no se muestra). Así el cartelito siempre coincide con las gaseosas que el cliente elige al tocar "+".
+Las papas y el resto van en la descripción. La descripción no menciona la gaseosa, para no repetirla.
 
 ## Gaseosas a elección
 

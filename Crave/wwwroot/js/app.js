@@ -173,9 +173,10 @@ function tarjetaHTML(p) {
     : "";
   const pronto = p.proximamente ? '<span class="franja-pronto">Próximamente</span>' : "";
   const clases = ["tarjeta", p.agotado ? "agotado" : "", p.proximamente ? "proximamente" : ""].join(" ").trim();
-  // Lo que viene incluido (columna "incluye" de la base). Va arriba de la descripción porque en el celular
-  // la descripción se corta en dos líneas, y esto tiene que verse siempre.
-  const incluye = p.incluye ? '<p class="incluye">Incluye <b>' + esc(p.incluye) + "</b></p>" : "";
+  // Cartelito "Incluye gaseosa" / "Incluye 4 gaseosas". Sale de cuántas gaseosas se eligen en el producto
+  // (columna gaseosas_a_elegir), así nunca dice algo distinto de lo que se pide en la ventana de gaseosas.
+  const n = p.gaseosasAElegir || 0;
+  const incluye = n > 0 ? '<p class="incluye">Incluye <b>' + (n === 1 ? "gaseosa" : n + " gaseosas") + "</b></p>" : "";
   return `
     <li class="reveal">
       <article class="${clases}">
