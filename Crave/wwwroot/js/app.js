@@ -12,7 +12,7 @@ const MODO_DEMO = false;
 const paginaAbiertaEn = Date.now();   // para el antispam: el servidor mira cuánto tiempo estuvo abierta la página
 
 const CONFIG = {
-  whatsapp: "5490000000000",          // ejemplo: reemplazar por el número real. Formato: 54 + 9 + código de área sin 0 + número sin 15 (ej.: 5493493123456)
+  whatsapp: "5493493445147",          // 3493 445147. Formato: 54 + 9 + código de área sin 0 + número sin 15
 
   // Cuenta para las transferencias (Naranja X). Se puede pagar desde cualquier banco o billetera, también Mercado Pago.
   // Si algún día cambia la cuenta, se cambia solo acá.

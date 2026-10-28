@@ -259,4 +259,3 @@ Pasos para cargar una foto:
 - Precios de los tacos (hoy son provisorios y no se muestran).
 - Confirmar con el cliente: "XL" en las hamburguesas grandes, que el Combo kids cheddar lleva gaseosa y si las XL incluyen papas o gaseosa.
 - Fotos que faltan: ver la tabla de "Fotos de los productos".
-- Número de WhatsApp real: se cambia en `CONFIG` dentro de `wwwroot/js/app.js`. Cuando esté, borrar el aviso "Página en preparación" (`nota-demo` en `index.html`).
