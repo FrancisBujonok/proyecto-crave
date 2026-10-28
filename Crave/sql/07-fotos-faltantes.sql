@@ -18,8 +18,7 @@
 
 -- (Las alitas salieron de la carta con sql/08-lanzamiento.sql: ya no hacen falta sus fotos.)
 
--- ---------- Familiar para 6 ----------
-update productos set imagen = 'img/productos/familiar-6.jpg' where id = 'fam-6';
+-- (La foto del Familiar para 6 se carga con sql/10-incluye-y-fotos.sql.)
 
 -- ---------- Tacos (hoy aparecen como "Próximamente"; las fotos pueden esperar a que salgan) ----------
 -- update productos set imagen = 'img/productos/taco-pollo.jpg'   where id = 'tac-pollo';

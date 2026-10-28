@@ -29,7 +29,7 @@ public static class ArmarCarta
         return new ProductoCarta(
             p.Id, p.CategoriaId, p.Nombre, p.Descripcion,
             precio, antes, descuento,
-            p.Icono, p.Imagen, p.Etiqueta,
+            p.Icono, p.Imagen, p.Etiqueta, p.Incluye,
             p.Agotado, p.Proximamente, p.Destacado, p.Orden, p.GaseosasAElegir);
     }
 }

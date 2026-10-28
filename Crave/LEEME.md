@@ -47,9 +47,10 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `Services/SeguimientoService.cs` | Busca un pedido por su código y devuelve solo lo que puede ver el cliente (`Models/Seguimiento.cs`). |
 | `wwwroot/seguimiento.html`, `css/seguimiento.css`, `js/seguimiento.js` | La página donde el cliente sigue su pedido. |
 | `wwwroot/img/productos/` | Fotos de los productos. |
-| `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (Familiar para 6, tacos). |
+| `sql/07-fotos-faltantes.sql` | Completa la columna `imagen` de los productos que todavía no tienen foto (hoy solo faltan los tacos). |
 | `sql/08-lanzamiento.sql` | Precios reales y de lanzamiento, tacos "Próximamente" y el interruptor de la promo. Correrlo ANTES de subir el código de la semana de lanzamiento. |
 | `sql/09-envios-y-horarios.sql` | Carga los barrios con su costo de envío y deja los horarios de 20:00 a 22:30, cada 30 minutos, 5 pedidos por horario. |
+| `sql/10-incluye-y-fotos.sql` | Agrega la columna `incluye` ("Incluye papas + gaseosa" en las tarjetas), gaseosas a elección en combos y hamburguesas, y la foto del Familiar para 6. Correrlo ANTES de subir el código. |
 | `Services/Precios.cs` | La única regla de precios: qué se cobra (normal o de lanzamiento), qué se tacha y el porcentaje de descuento. |
 | `Services/ArmarCarta.cs` | Arma la carta que recibe la página (`Models/Carta.cs`) con los precios de hoy ya calculados. |
 | `wwwroot/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Ícono de la pestaña, del iPhone y de Android (la "A" roja del logo sobre negro). |
@@ -165,9 +166,15 @@ Los textos de la cinta están en `CONFIG.promo` de `wwwroot/js/app.js`. La base 
 
 **Tacos "Próximamente":** la columna `proximamente` muestra el producto con una franja gris y sin botón para agregarlo; el servidor también lo rechaza. Cuando salgan los tacos: cargar sus precios reales y correr `update productos set proximamente = false where categoria_id = 'tacos';`.
 
+## Qué incluye cada producto
+
+En el celular la descripción de la tarjeta se corta en dos líneas, así que lo que viene incluido se muestra aparte, en un cartelito arriba de la descripción: "Incluye papas + gaseosa".
+Sale de la columna `incluye` de `productos` (texto en minúscula, ej.: `2 papas + 2 gaseosas`). Vacía = no se muestra (popcrave, papas con cheddar, aros, bebidas, tacos).
+Se cambia desde Supabase -> Table Editor -> `productos`. Si un producto pasa a llevar gaseosa, cambiá también `gaseosas_a_elegir` para que el cliente la elija.
+
 ## Gaseosas a elección
 
-Algunos productos (Familiar para 4, 5 y 6 y el menú niños) llevan gaseosas a elección. Se define con la columna `gaseosas_a_elegir` de `productos` (0 = ninguna).
+Algunos productos (Combo individual, Combo para 2 y 3, Familiar para 4, 5 y 6, menú niños y hamburguesas XL) llevan gaseosas a elección, una por persona. Se define con la columna `gaseosas_a_elegir` de `productos` (0 = ninguna).
 Las opciones son los productos de la categoría `bebidas`: si marcás una como agotada, deja de ofrecerse en todos los combos.
 El cliente las elige en una ventana al tocar "+", y quedan guardadas en `pedido_items.detalle` (ejemplo: "2 × Coca-Cola, 1 × Sprite").
 
@@ -221,17 +228,16 @@ Para que funcione hay que correr una vez `sql/06-seguimiento.sql` en Supabase, A
 
 Cada producto tiene una columna `imagen` en la tabla `productos` (la ruta del archivo dentro de `wwwroot`). Si está vacía, la tarjeta muestra un dibujo provisorio. Si la ruta existe pero el archivo no carga, también se muestra el dibujo (`app.js`, escuchador de "error"): nunca queda una imagen rota.
 
-Faltan 5 fotos. La del Familiar para 6 es la que importa ahora; los tacos están como "Próximamente" y pueden esperar. (Las alitas salieron de la carta.)
+Faltan solo las fotos de los tacos, que están como "Próximamente" y pueden esperar. (Las alitas salieron de la carta.)
 
 | Producto (id) | Archivo que hay que crear en `wwwroot/img/productos/` |
 |---|---|
-| Familiar para 6 (`fam-6`) | `familiar-6.jpg` |
 | Taco de pollo crispy (`tac-pollo`) | `taco-pollo.jpg` |
 | Taco de carne (`tac-carne`) | `taco-carne.jpg` |
 | Combo 3 tacos (`tac-combo3`) | `combo-3-tacos.jpg` |
 | Combo 6 tacos (`tac-combo6`) | `combo-6-tacos.jpg` |
 
-Cómo preparar cada foto (para que se vea igual que las 20 que ya están):
+Cómo preparar cada foto (para que se vea igual que las que ya están):
 
 - Horizontal, proporción 4:3, de 800 x 600 píxeles. Las que hay hoy miden 800 x 600 (la tarjeta recorta lo que sobre, así que el producto va al centro).
 - Formato JPG y menos de 100 KB. Una foto de celular pesa varios MB y haría lenta la carta. Para achicarla: squoosh.app, arrastrar la foto, "Resize" a ancho 800, formato "MozJPEG", calidad cerca de 75, y bajar el resultado.
@@ -257,5 +263,5 @@ Pasos para cargar una foto:
 ## Pendiente
 
 - Precios de los tacos (hoy son provisorios y no se muestran).
-- Confirmar con el cliente: "XL" en las hamburguesas grandes, que el Combo kids cheddar lleva gaseosa y si las XL incluyen papas o gaseosa.
+- Confirmar con el cliente: "XL" en las hamburguesas grandes y si las XL incluyen papas (la gaseosa ya está confirmada).
 - Fotos que faltan: ver la tabla de "Fotos de los productos".

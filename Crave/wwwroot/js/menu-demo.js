@@ -15,18 +15,19 @@ const MENU_DEMO = {
           "id": "ind-pollo4",
           "categoriaId": "individual",
           "nombre": "Combo individual",
-          "descripcion": "4 piezas de pollo frito con papas individuales.",
+          "descripcion": "4 piezas de pollo frito con papas y gaseosa a elección.",
           "precio": 14000,
           "precioAntes": 17900,
           "descuento": 21,
           "icono": "pollo",
           "imagen": "img/productos/pollo-4-piezas.jpg",
           "etiqueta": "Para 1",
+          "incluye": "papas + gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": true,
           "orden": 1,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 1
         },
         {
           "id": "ind-popcrave",
@@ -39,6 +40,7 @@ const MENU_DEMO = {
           "icono": "pollo",
           "imagen": "img/productos/popcrave.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -56,6 +58,7 @@ const MENU_DEMO = {
           "icono": "papas",
           "imagen": "img/productos/papas-cheddar-bacon.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -73,6 +76,7 @@ const MENU_DEMO = {
           "icono": "papas",
           "imagen": "img/productos/aros-cebolla.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -92,35 +96,37 @@ const MENU_DEMO = {
           "id": "cmp-pollo8",
           "categoriaId": "compartir",
           "nombre": "Combo para 2",
-          "descripcion": "8 piezas de pollo crujiente + 2 papas.",
+          "descripcion": "8 piezas de pollo crujiente + 2 papas + 2 gaseosas a elección.",
           "precio": 29900,
           "precioAntes": 35000,
           "descuento": 14,
           "icono": "balde",
           "imagen": "img/productos/combo-2-personas.jpg",
           "etiqueta": "Para 2",
+          "incluye": "2 papas + 2 gaseosas",
           "agotado": false,
           "proximamente": false,
           "destacado": true,
           "orden": 1,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 2
         },
         {
           "id": "cmp-pollo12",
           "categoriaId": "compartir",
           "nombre": "Combo para 3",
-          "descripcion": "12 piezas de pollo crujiente + 3 papas.",
+          "descripcion": "12 piezas de pollo crujiente + 3 papas + 3 gaseosas a elección.",
           "precio": 41000,
           "precioAntes": 49900,
           "descuento": 17,
           "icono": "balde",
           "imagen": "img/productos/combo-3-personas.jpg",
           "etiqueta": "Para 3",
+          "incluye": "3 papas + 3 gaseosas",
           "agotado": false,
           "proximamente": false,
           "destacado": true,
           "orden": 2,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 3
         }
       ]
     },
@@ -142,6 +148,7 @@ const MENU_DEMO = {
           "icono": "balde",
           "imagen": "img/productos/familiar-4.jpg",
           "etiqueta": "Para 4",
+          "incluye": "4 papas + 4 gaseosas",
           "agotado": false,
           "proximamente": false,
           "destacado": true,
@@ -159,6 +166,7 @@ const MENU_DEMO = {
           "icono": "balde",
           "imagen": "img/productos/familiar-5.jpg",
           "etiqueta": "Para 5",
+          "incluye": "5 papas + 5 gaseosas",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -174,8 +182,9 @@ const MENU_DEMO = {
           "precioAntes": 92000,
           "descuento": 16,
           "icono": "balde",
-          "imagen": null,
+          "imagen": "img/productos/familiar-6.jpg",
           "etiqueta": "Para 6",
+          "incluye": "6 papas + 6 gaseosas",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -202,6 +211,7 @@ const MENU_DEMO = {
           "icono": "pollo",
           "imagen": "img/productos/combo-ninos-popcrave.jpg",
           "etiqueta": "Niños",
+          "incluye": "papas + gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -219,6 +229,7 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/mini-crave-ninos.jpg",
           "etiqueta": "Niños",
+          "incluye": "papas + gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -236,6 +247,7 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/fresh-chicken-ninos.jpg",
           "etiqueta": "Niños",
+          "incluye": "papas + gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -253,6 +265,7 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/crispy-club-ninos.jpg",
           "etiqueta": "Niños",
+          "incluye": "papas + gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -270,6 +283,7 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/sweet-crave-ninos.jpg",
           "etiqueta": "Niños",
+          "incluye": "papas + gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -296,11 +310,12 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/fresh-chicken-grande.jpg",
           "etiqueta": "XL",
+          "incluye": "gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
           "orden": 1,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 1
         },
         {
           "id": "ham-sweet",
@@ -313,11 +328,12 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/sweet-crave-grande.jpg",
           "etiqueta": "XL",
+          "incluye": "gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 1
         },
         {
           "id": "ham-crispy",
@@ -330,11 +346,12 @@ const MENU_DEMO = {
           "icono": "hamburguesa",
           "imagen": "img/productos/crispy-club-grande.jpg",
           "etiqueta": "XL",
+          "incluye": "gaseosa",
           "agotado": false,
           "proximamente": false,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 1
         }
       ]
     },
@@ -356,6 +373,7 @@ const MENU_DEMO = {
           "icono": "gaseosa",
           "imagen": "img/productos/gaseosa-coca.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -373,6 +391,7 @@ const MENU_DEMO = {
           "icono": "gaseosa",
           "imagen": "img/productos/gaseosa-sprite.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -390,6 +409,7 @@ const MENU_DEMO = {
           "icono": "gaseosa",
           "imagen": "img/productos/gaseosa-fanta.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -407,6 +427,7 @@ const MENU_DEMO = {
           "icono": "gaseosa",
           "imagen": "img/productos/gaseosa-zero.jpg",
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": false,
           "destacado": false,
@@ -433,6 +454,7 @@ const MENU_DEMO = {
           "icono": "taco",
           "imagen": null,
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": true,
           "destacado": false,
@@ -450,6 +472,7 @@ const MENU_DEMO = {
           "icono": "taco",
           "imagen": null,
           "etiqueta": null,
+          "incluye": null,
           "agotado": false,
           "proximamente": true,
           "destacado": false,
@@ -467,6 +490,7 @@ const MENU_DEMO = {
           "icono": "taco",
           "imagen": null,
           "etiqueta": "Para 1",
+          "incluye": null,
           "agotado": false,
           "proximamente": true,
           "destacado": false,
@@ -484,6 +508,7 @@ const MENU_DEMO = {
           "icono": "taco",
           "imagen": null,
           "etiqueta": "Para 2",
+          "incluye": null,
           "agotado": false,
           "proximamente": true,
           "destacado": false,
@@ -494,15 +519,55 @@ const MENU_DEMO = {
     }
   ],
   "zonas": [
-    { "id": "9-de-julio", "nombre": "9 de Julio", "costo": 1000 },
-    { "id": "colon", "nombre": "Colón", "costo": 1000 },
-    { "id": "villa-del-parque", "nombre": "Villa del Parque", "costo": 1000 },
-    { "id": "barrio-sancor", "nombre": "Barrio Sancor", "costo": 1500 },
-    { "id": "centro", "nombre": "Centro", "costo": 1500 },
-    { "id": "ciudad-verde", "nombre": "Ciudad Verde", "costo": 2000 },
-    { "id": "cooperativo", "nombre": "Cooperativo", "costo": 2000 },
-    { "id": "moreno", "nombre": "Moreno", "costo": 2000 },
-    { "id": "villa-autodromo", "nombre": "Villa Autódromo", "costo": 2000 },
-    { "id": "zona-sur", "nombre": "Zona Sur", "costo": 2000 }
+    {
+      "id": "9-de-julio",
+      "nombre": "9 de Julio",
+      "costo": 1000
+    },
+    {
+      "id": "colon",
+      "nombre": "Colón",
+      "costo": 1000
+    },
+    {
+      "id": "villa-del-parque",
+      "nombre": "Villa del Parque",
+      "costo": 1000
+    },
+    {
+      "id": "barrio-sancor",
+      "nombre": "Barrio Sancor",
+      "costo": 1500
+    },
+    {
+      "id": "centro",
+      "nombre": "Centro",
+      "costo": 1500
+    },
+    {
+      "id": "ciudad-verde",
+      "nombre": "Ciudad Verde",
+      "costo": 2000
+    },
+    {
+      "id": "cooperativo",
+      "nombre": "Cooperativo",
+      "costo": 2000
+    },
+    {
+      "id": "moreno",
+      "nombre": "Moreno",
+      "costo": 2000
+    },
+    {
+      "id": "villa-autodromo",
+      "nombre": "Villa Autódromo",
+      "costo": 2000
+    },
+    {
+      "id": "zona-sur",
+      "nombre": "Zona Sur",
+      "costo": 2000
+    }
   ]
 };

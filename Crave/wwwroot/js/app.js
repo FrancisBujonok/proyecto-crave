@@ -173,12 +173,16 @@ function tarjetaHTML(p) {
     : "";
   const pronto = p.proximamente ? '<span class="franja-pronto">Próximamente</span>' : "";
   const clases = ["tarjeta", p.agotado ? "agotado" : "", p.proximamente ? "proximamente" : ""].join(" ").trim();
+  // Lo que viene incluido (columna "incluye" de la base). Va arriba de la descripción porque en el celular
+  // la descripción se corta en dos líneas, y esto tiene que verse siempre.
+  const incluye = p.incluye ? '<p class="incluye">Incluye <b>' + esc(p.incluye) + "</b></p>" : "";
   return `
     <li class="reveal">
       <article class="${clases}">
         <div class="arte">${arte}${etiqueta}${oferta}${pronto}</div>
         <div class="cuerpo-tarjeta">
           <h3 class="nombre">${esc(p.nombre)}</h3>
+          ${incluye}
           <p class="desc">${esc(p.descripcion)}</p>
           <div class="pie-tarjeta">
             ${precioHTML(p)}

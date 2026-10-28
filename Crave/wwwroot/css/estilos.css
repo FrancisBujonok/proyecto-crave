@@ -304,7 +304,15 @@ body::after {
   color: var(--apagado); font-size: .875rem; text-wrap: pretty;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.pie-tarjeta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; }
+/* "Incluye papas + gaseosa": cartelito discreto con una raya roja a la izquierda */
+.incluye {
+  align-self: flex-start; padding: 3px 8px; background: var(--tarjeta-2); box-shadow: inset 3px 0 0 var(--rojo);
+  color: var(--apagado); font-size: .75rem; font-weight: 600; line-height: 1.35;
+}
+.incluye b { color: var(--texto); font-weight: 700; }
+.proximamente .incluye, .agotado .incluye { box-shadow: none; }
+/* flex-wrap: en celulares angostos, si el precio y el botón (o "Agotado") no entran juntos, el botón baja de línea */
+.pie-tarjeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; }
 .precio { font-family: var(--fuente-titulo); font-weight: 800; font-size: 1.125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .mas {

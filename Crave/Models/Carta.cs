@@ -30,6 +30,7 @@ public record ProductoCarta(
     string? Icono,
     string? Imagen,
     string? Etiqueta,
+    string? Incluye,         // lo que viene con el producto, ej.: "papas + gaseosa" (null = nada)
     bool Agotado,
     bool Proximamente,
     bool Destacado,
