@@ -300,10 +300,9 @@ body::after {
 
 .cuerpo-tarjeta { display: flex; flex-direction: column; gap: 6px; flex: 1; padding: 14px 14px 16px; }
 .nombre { font-size: 1rem; font-weight: 700; line-height: 1.25; }
-.desc {
-  color: var(--apagado); font-size: .875rem; text-wrap: pretty;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
+/* La descripción se muestra completa (sin cortar con "..."): son textos cortos y en el celular
+   es la única forma de leer los ingredientes. Las tarjetas de una misma fila quedan de la misma altura igual. */
+.desc { color: var(--apagado); font-size: .875rem; text-wrap: pretty; }
 /* "Incluye papas + gaseosa": cartelito discreto con una raya roja a la izquierda */
 .incluye {
   align-self: flex-start; padding: 3px 8px; background: var(--tarjeta-2); box-shadow: inset 3px 0 0 var(--rojo);

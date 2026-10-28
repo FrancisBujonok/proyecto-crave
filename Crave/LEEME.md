@@ -122,6 +122,12 @@ Cualquiera puede mandar un pedido a `POST /api/pedidos` sin usar la página, as�
 Los números están al principio de `PedidoReglas.cs` y `Limites.cs`. Si un cliente real se queda bloqueado, el motivo queda en el log del servidor (Render, pestaña Logs) con la palabra "antispam".
 Un spammer decidido puede saltarse algunas de estas defensas. Si alguien llena los horarios con pedidos falsos, desde el panel los cancelás y el lugar se libera.
 
+## Que los celulares vean los cambios enseguida
+
+`Program.cs` manda los archivos de `wwwroot` con `Cache-Control: no-cache`: el navegador los guarda, pero antes de usarlos pregunta si cambiaron.
+Por eso, al reemplazar una foto con el mismo nombre (ej.: `gaseosa-coca.jpg`) o cambiar `app.js`, alcanza con que Render termine de publicar: no hace falta renombrar nada.
+Los celulares que abrieron la página antes de este cambio pueden tardar un poco en tomar la regla nueva (o recargar).
+
 ## Que el sitio no se duerma (Render) ni se pause (Supabase)
 
 Hay dos "dormidas" distintas en los planes gratuitos:

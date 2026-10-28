@@ -40,7 +40,14 @@ app.UsarLimites();   // aplica los límites de velocidad
 app.UsarAdmin();   // identifica al dueño en cada pedido y aplica el límite de intentos
 
 app.UseDefaultFiles();   // sirve wwwroot/index.html cuando se entra a "/"
-app.UseStaticFiles();    // sirve css, js e imágenes de la carpeta wwwroot
+// Sirve css, js e imágenes de la carpeta wwwroot.
+// "no-cache" NO significa "no guardar": el navegador guarda el archivo, pero antes de usarlo le pregunta al servidor
+// si cambió (si no cambió, la respuesta es cortita). Así, después de cada deploy los celulares ven enseguida
+// el app.js, el css y las fotos nuevas, aunque tengan el mismo nombre que las viejas.
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = archivo => archivo.Context.Response.Headers.CacheControl = "no-cache"
+});
 
 // La página pide la carta acá. Sale de las tablas categorias, productos y zonas.
 // Los precios salen ya calculados: si los precios de lanzamiento están prendidos en el panel, "precio" es el de
