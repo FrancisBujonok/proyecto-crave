@@ -34,9 +34,11 @@ public class HorarioService
             var zona = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
             return TimeZoneInfo.ConvertTime(DateTime.UtcNow, zona);
         }
-        catch (TimeZoneNotFoundException)
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
         {
-            return DateTime.Now;
+            // Si el servidor no tiene la tabla de zonas horarias, NO usamos DateTime.Now: en Render esa es la hora UTC
+            // y los horarios quedarían corridos 3 horas. Argentina está siempre en UTC-3 (no cambia de hora en verano).
+            return DateTime.SpecifyKind(DateTime.UtcNow.AddHours(-3), DateTimeKind.Unspecified);
         }
     }
 

@@ -113,7 +113,7 @@ Cualquiera puede mandar un pedido a `POST /api/pedidos` sin usar la página, as�
 
 | Defensa | Qué hace | Dónde está |
 |---|---|---|
-| Límite por IP | 10 envíos de pedido cada 10 minutos, 5 intentos de login cada 10 minutos y 60 lecturas de carta u horarios por minuto. Si se pasa: 429. | `Endpoints/Limites.cs` |
+| Límite por IP | 30 envíos de pedido cada 10 minutos, 5 intentos de login cada 10 minutos y 200 lecturas de carta u horarios por minuto. Si se pasa: 429. Son generosos a propósito: en los celulares muchos clientes comparten la misma IP (CGNAT). | `Endpoints/Limites.cs` |
 | Tamaño máximo | Ningún envío puede pesar más de 64 KB (si no: 413). | `Program.cs` |
 | Largos y caracteres | Nombre 60, teléfono 25, calle 80, piso 30, referencias 200, aclaraciones 300. Sin caracteres invisibles. Teléfono solo con números, espacios, + y guiones. Datos que faltan (null) no rompen el servidor. | `Services/PedidoReglas.cs` |
 | Campo trampa | Un campo oculto (`website`) que una persona nunca llena. Si viene lleno, se descarta el pedido. | `index.html` y `PedidoReglas.EsSospechoso` |
@@ -226,7 +226,7 @@ Para que funcione hay que correr una vez `sql/06-seguimiento.sql` en Supabase, A
 
 - **Por qué un código y no el número CR-1001:** el número es correlativo, así que cualquiera podría probar CR-1002, CR-1003... y mirar pedidos ajenos. El código tiene 12 letras y números al azar (`SeguimientoReglas.NuevoCodigo`, con `RandomNumberGenerator`, el azar de seguridad de .NET): más de 7 x 10^17 combinaciones. Sin el enlace no hay forma práctica de llegar al pedido.
 - **Qué devuelve `GET /api/seguimiento/{codigo}`:** número, estado, horario, medio de pago, si la transferencia está confirmada y el total. Nunca nombre, teléfono, dirección, referencias ni aclaraciones (clase `SeguimientoPedido`).
-- Un código mal escrito o inexistente responde siempre 404 igual. Límite: 30 consultas por minuto por IP (`Limites.PoliticaSeguimiento`); la página consulta 4 por minuto.
+- Un código mal escrito o inexistente responde siempre 404 igual. Límite: 120 consultas por minuto por IP (`Limites.PoliticaSeguimiento`); la página consulta 4 por minuto, así que alcanza para unas 30 personas detrás de la misma IP del celular.
 - Si la transferencia no está confirmada, la página le recuerda al cliente que mande el comprobante por el chat de WhatsApp donde envió el pedido. Esto usa lo que se marca en el panel (ver arriba).
 - Los pedidos hechos antes de este cambio no tienen código ni página de seguimiento.
 - La página no tiene botón de WhatsApp propio para no repetir el número en un segundo lugar: el cliente usa el chat donde ya mandó el pedido.

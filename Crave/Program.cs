@@ -99,7 +99,7 @@ app.MapGet("/api/seguimiento/{codigo}", async (string codigo, SeguimientoService
     return pedido == null
         ? Results.NotFound(new { error = "No encontramos ese pedido. Revisá el enlace." })
         : Results.Ok(pedido);
-}).RequireRateLimiting(Limites.PoliticaSeguimiento);   // máximo 30 consultas por minuto por IP
+}).RequireRateLimiting(Limites.PoliticaSeguimiento);   // máximo 120 consultas por minuto por IP
 
 // La página manda el pedido acá. C# convierte el JSON recibido en un objeto PedidoNuevo.
 app.MapPost("/api/pedidos", async (PedidoNuevo pedido, PedidoService servicio, HttpContext http, ILoggerFactory logs) =>
@@ -125,7 +125,7 @@ app.MapPost("/api/pedidos", async (PedidoNuevo pedido, PedidoService servicio, H
         return Results.Conflict(new { errores = new[] { "Ese horario se acaba de completar. Elegí otro." } });   // 409
     }
     return Results.Ok(creado);                         // 200 con el pedido ya calculado
-}).RequireRateLimiting(Limites.PoliticaPedidos);   // máximo 10 envíos cada 10 minutos por IP
+}).RequireRateLimiting(Limites.PoliticaPedidos);   // máximo 30 envíos cada 10 minutos por IP
 
 app.MapearAdmin();   // /api/admin/login, /api/admin/logout, /api/admin/yo
 
