@@ -38,11 +38,13 @@ let menu = { categorias: [], zonas: [] };
 let productos = {};      // id -> producto, para encontrarlo rápido
 const MAXIMO_POR_PRODUCTO = 30;   // el servidor también lo exige (PedidoService.Validar)
 let carrito = {};        // productos comunes: id -> cantidad. Ejemplo: { "ind-pollo4": 2, "beb-coca": 1 }
-// Productos con gaseosas a elegir (ej.: Familiar para 4): un renglón por cada unidad, porque cada una
-// puede llevar gaseosas distintas. Ejemplo: [{ uid: 1, id: "fam-4", gaseosas: ["beb-coca", "beb-coca", "beb-fanta", "beb-sprite"] }]
+// Productos con gaseosas y/o salsas a elegir (ej.: Familiar para 4): un renglón por cada unidad, porque cada una
+// puede llevar opciones distintas. Ejemplo:
+// [{ uid: 1, id: "fam-4", gaseosas: ["beb-coca", "beb-coca", "beb-fanta", "beb-sprite"], salsas: ["sal-crave", ...], sinGaseosa: false, sinSalsa: false }]
+// sinGaseosa / sinSalsa = true cuando el cliente tocó "No quiero gaseosa" / "No quiero salsa" (la lista queda vacía).
 let combos = [];
 let siguienteUid = 1;    // numerador para identificar cada renglón de "combos"
-let selector = null;     // lo que se está eligiendo en la ventana de gaseosas: { id, uid, origen, cantidades }
+let selector = null;     // lo que se está eligiendo en la ventana: { id, uid, origen, cantidades: { gaseosas: {}, salsas: {} }, sin: { gaseosas, salsas } }
 let franjas = [];        // horarios de hoy: [{ hora: "21:15", libres: 3 }, ...]
 let franjasError = "";  // texto para mostrar si no hay horarios o no se pudieron cargar
 let localCerrado = false;  // true cuando el dueño cerró el local desde el panel
@@ -71,8 +73,18 @@ function iconoChico(nombre) {
 // Avisa a lectores de pantalla (no se ve en pantalla)
 function anunciar(texto) { $("#aviso").textContent = texto; }
 
-// ¿Este producto lleva gaseosas a elegir? (lo define la columna gaseosas_a_elegir de la base)
-function tieneOpciones(p) { return (p.gaseosasAElegir || 0) > 0; }
+// Lo que se elige en la ventana al tocar "+": gaseosas y salsas. Los dos grupos funcionan igual
+// (mismas reglas que Services/Opciones.cs en el servidor); cada producto dice cuántas de cada uno.
+const GRUPOS = [
+  { clave: "gaseosas", campo: "gaseosasAElegir", sin: "sinGaseosa", singular: "gaseosa", plural: "gaseosas", titulo: "Gaseosas" },
+  { clave: "salsas",   campo: "salsasAElegir",   sin: "sinSalsa",   singular: "salsa",   plural: "salsas",   titulo: "Salsas" }
+];
+
+// Los grupos que lleva un producto. Ejemplo: Familiar para 4 -> los dos; Aros de cebolla -> ninguno.
+function gruposDe(p) { return GRUPOS.filter(g => (p[g.campo] || 0) > 0); }
+
+// ¿Este producto abre la ventana de elección? (columnas gaseosas_a_elegir y salsas_a_elegir de la base)
+function tieneOpciones(p) { return gruposDe(p).length > 0; }
 
 // ¿Se puede pedir hoy? No, si está agotado o si todavía es "Próximamente" (los tacos)
 function sePuedePedir(p) { return !p.agotado && !p.proximamente; }
@@ -90,12 +102,38 @@ function mayorDescuento() {
   return mayor;
 }
 
-// [coca, coca, sprite] -> "2 × Coca-Cola, 1 × Sprite". Con una sola gaseosa: solo el nombre.
-function textoGaseosas(ids) {
-  if (ids.length === 1) return productos[ids[0]].nombre;
+// Las opciones que se pueden elegir hoy en un grupo (sin las agotadas)
+function disponiblesDe(grupo) {
+  if (grupo.clave === "gaseosas") return gaseosasDisponibles();
+  return (menu.salsas || []).filter(s => !s.agotado);
+}
+
+// El nombre de una gaseosa o salsa a partir de su id
+function nombreOpcion(grupo, id) {
+  if (grupo.clave === "gaseosas") return productos[id] ? productos[id].nombre : id;
+  const salsa = (menu.salsas || []).find(s => s.id === id);
+  return salsa ? salsa.nombre : id;
+}
+
+// [coca, coca, sprite] -> "2 × Coca-Cola, 1 × Sprite". Con una sola: solo el nombre.
+function listaConCantidades(grupo, ids) {
+  if (ids.length === 1) return nombreOpcion(grupo, ids[0]);
   const cuenta = {};
   ids.forEach(id => { cuenta[id] = (cuenta[id] || 0) + 1; });
-  return Object.keys(cuenta).map(id => cuenta[id] + " × " + productos[id].nombre).join(", ");
+  return Object.keys(cuenta).map(id => cuenta[id] + " × " + nombreOpcion(grupo, id)).join(", ");
+}
+
+// El texto de un grupo, igual al que arma el servidor: "Gaseosas: 2 × Coca-Cola, 1 × Sprite", "Salsa: CRAVE", "Sin salsa"
+function textoGrupo(combo, grupo) {
+  const ids = combo[grupo.clave] || [];
+  if (combo[grupo.sin] || ids.length === 0) return "Sin " + grupo.singular;
+  const titulo = ids.length === 1 ? grupo.singular : grupo.plural;
+  return titulo.charAt(0).toUpperCase() + titulo.slice(1) + ": " + listaConCantidades(grupo, ids);
+}
+
+// Todo lo elegido en un renglón: "Gaseosas: ...; Salsas: ..." (lo mismo que se guarda en pedido_items.detalle)
+function textoOpciones(combo) {
+  return gruposDe(productos[combo.id]).map(g => textoGrupo(combo, g)).join("; ");
 }
 
 // Cuántas unidades de un producto hay en el pedido (sea común o con gaseosas)
@@ -173,10 +211,10 @@ function tarjetaHTML(p) {
     : "";
   const pronto = p.proximamente ? '<span class="franja-pronto">Próximamente</span>' : "";
   const clases = ["tarjeta", p.agotado ? "agotado" : "", p.proximamente ? "proximamente" : ""].join(" ").trim();
-  // Cartelito "Incluye gaseosa" / "Incluye 4 gaseosas". Sale de cuántas gaseosas se eligen en el producto
-  // (columna gaseosas_a_elegir), así nunca dice algo distinto de lo que se pide en la ventana de gaseosas.
-  const n = p.gaseosasAElegir || 0;
-  const incluye = n > 0 ? '<p class="incluye">Incluye <b>' + (n === 1 ? "gaseosa" : n + " gaseosas") + "</b></p>" : "";
+  // Cartelito "Incluye gaseosa y salsa" / "Incluye 4 gaseosas y 4 salsas". Sale de cuántas se eligen en el producto
+  // (columnas gaseosas_a_elegir y salsas_a_elegir), así nunca dice algo distinto de lo que se pide en la ventana.
+  const partes = gruposDe(p).map(g => (p[g.campo] === 1 ? g.singular : p[g.campo] + " " + g.plural));
+  const incluye = partes.length > 0 ? '<p class="incluye">Incluye <b>' + partes.join(" y ") + "</b></p>" : "";
   return `
     <li class="reveal">
       <article class="${clases}">
@@ -336,12 +374,13 @@ function llenarZonas() {
 
 // ---------- 5. CARRITO ----------
 function guardarCarrito() {
-  try { localStorage.setItem("crave_carrito_v2", JSON.stringify({ simples: carrito, combos: combos })); } catch (e) { /* si no se puede guardar, no pasa nada */ }
+  try { localStorage.setItem("crave_carrito_v3", JSON.stringify({ simples: carrito, combos: combos })); } catch (e) { /* si no se puede guardar, no pasa nada */ }
 }
 
 function leerCarrito() {
   try {
-    const guardado = JSON.parse(localStorage.getItem("crave_carrito_v2") || "{}");
+    // v3 = con salsas. Lo guardado con la versión anterior (sin salsas) se descarta.
+    const guardado = JSON.parse(localStorage.getItem("crave_carrito_v3") || "{}");
 
     // Productos comunes: solo recuperamos los que todavía existen y se pueden pedir
     const simples = guardado.simples || {};
@@ -350,14 +389,20 @@ function leerCarrito() {
       if (p && sePuedePedir(p) && !tieneOpciones(p) && simples[id] > 0) carrito[id] = Math.min(simples[id], MAXIMO_POR_PRODUCTO);
     }
 
-    // Combos con gaseosas: recuperamos los que siguen siendo válidos (producto vigente y gaseosas disponibles)
-    const disponibles = gaseosasDisponibles().map(g => g.id);
+    // Combos con gaseosas y salsas: recuperamos los que siguen siendo válidos (producto vigente y opciones disponibles)
     (guardado.combos || []).forEach(c => {
       const p = productos[c.id];
       if (!p || !sePuedePedir(p) || !tieneOpciones(p)) return;
-      if (!Array.isArray(c.gaseosas) || c.gaseosas.length !== p.gaseosasAElegir) return;
-      if (!c.gaseosas.every(g => disponibles.includes(g))) return;
-      combos.push({ uid: siguienteUid++, id: c.id, gaseosas: c.gaseosas });
+      const nuevo = { uid: siguienteUid++, id: c.id, gaseosas: [], salsas: [], sinGaseosa: false, sinSalsa: false };
+      const valido = gruposDe(p).every(g => {
+        if (c[g.sin] === true) { nuevo[g.sin] = true; return true; }
+        const ids = c[g.clave];
+        const disponibles = disponiblesDe(g).map(o => o.id);
+        if (!Array.isArray(ids) || ids.length !== p[g.campo] || !ids.every(id => disponibles.includes(id))) return false;
+        nuevo[g.clave] = ids;
+        return true;
+      });
+      if (valido) combos.push(nuevo);
     });
   } catch (e) { /* ignoramos datos guardados rotos */ }
 }
@@ -423,7 +468,7 @@ function cambiarCantidad(id, cambio, boton) {
   anunciar(productos[id].nombre + ": " + despues + " en el pedido. Total " + dinero.format(calcularTotal()) + ".");
 }
 
-// ----- Productos con gaseosas a elegir (Familiar, menú niños) -----
+// ----- Productos con gaseosas y salsas a elegir (combos, familiares, menú niños, hamburguesas XL) -----
 
 // Quita la última unidad que se agregó de ese producto (el "-" de la tarjeta)
 function quitarUltimoCombo(id, boton) {
@@ -449,10 +494,12 @@ function quitarCombo(uid) {
   if (siguiente) siguiente.focus();
 }
 
-// Abre la ventana para elegir las gaseosas. Si "uid" es null es un combo nuevo; si no, se edita ese renglón.
+// Abre la ventana para elegir gaseosas y salsas. Si "uid" es null es un combo nuevo; si no, se edita ese renglón.
 function abrirSelector(id, uid, origen) {
   const p = productos[id];
-  const cantidades = {};   // gaseosa -> cuántas. Ejemplo: { "beb-coca": 2, "beb-sprite": 1 }
+  // Cuántas de cada opción. Ejemplo: { gaseosas: { "beb-coca": 2, "beb-sprite": 1 }, salsas: { "sal-crave": 3 } }
+  const cantidades = { gaseosas: {}, salsas: {} };
+  const sin = { gaseosas: false, salsas: false };   // true = tocó "No quiero ..."
 
   if (uid === null) {
     if (cantidadDe(id) >= MAXIMO_POR_PRODUCTO) {
@@ -460,107 +507,161 @@ function abrirSelector(id, uid, origen) {
       return;
     }
   } else {
-    // Al editar arrancamos con lo que ya estaba elegido (salvo las gaseosas que se hayan agotado)
+    // Al editar arrancamos con lo que ya estaba elegido (salvo lo que se haya agotado)
     const combo = combos.find(c => c.uid === uid);
-    const disponibles = gaseosasDisponibles().map(g => g.id);
-    if (combo) combo.gaseosas.forEach(g => { if (disponibles.includes(g)) cantidades[g] = (cantidades[g] || 0) + 1; });
+    if (combo) {
+      gruposDe(p).forEach(g => {
+        if (combo[g.sin]) { sin[g.clave] = true; return; }
+        const disponibles = disponiblesDe(g).map(o => o.id);
+        combo[g.clave].forEach(o => { if (disponibles.includes(o)) cantidades[g.clave][o] = (cantidades[g.clave][o] || 0) + 1; });
+      });
+    }
   }
 
-  selector = { id: id, uid: uid, origen: origen, cantidades: cantidades };
+  selector = { id: id, uid: uid, origen: origen, cantidades: cantidades, sin: sin };
   dibujarSelector();
   $("#selector").showModal();
-  const primero = $('#selector-caja [data-delta="1"]:not([disabled])');
+  const primero = $('#selector-caja [data-delta="1"]:not([disabled])') || $("#selector-caja [data-sin]");
   if (primero) primero.focus();
 }
 
-function totalElegido() {
-  return Object.values(selector.cantidades).reduce((suma, n) => suma + n, 0);
+// Cuántas opciones de un grupo se eligieron (ej.: 3 gaseosas)
+function totalElegido(clave) {
+  return Object.values(selector.cantidades[clave]).reduce((suma, n) => suma + n, 0);
 }
 
-// Dibuja el contenido de la ventana: una fila por gaseosa con "-", cantidad y "+"
+// Un grupo está listo si tiene exactamente las que hacen falta, o si el cliente tocó "No quiero ..."
+function grupoListo(p, g) {
+  return selector.sin[g.clave] || totalElegido(g.clave) === p[g.campo];
+}
+
+// Dibuja el contenido de la ventana: un bloque por grupo (Gaseosas, Salsas) y los botones de abajo
 function dibujarSelector() {
   const p = productos[selector.id];
-  const necesarias = p.gaseosasAElegir;
-  const elegidas = totalElegido();
-  const completo = elegidas === necesarias;
-  const sabores = gaseosasDisponibles();
+  const grupos = gruposDe(p);
+  const todoListo = grupos.every(g => grupoListo(p, g));
 
-  const filas = sabores.map(s => {
-    const n = selector.cantidades[s.id] || 0;
-    // Con una sola gaseosa a elegir el "+" siempre sirve (cambia la elección). Con varias, se bloquea al completar.
-    const bloquearMas = completo && necesarias > 1;
+  $("#selector-caja").innerHTML = `
+    <h3 id="selector-titulo">${esc(p.nombre)}</h3>
+    <p class="ayuda">Elegí ${grupos.map(g => g.plural).join(" y ")}. Si no querés, tocá "No quiero".</p>
+    ${grupos.map(g => bloqueGrupoHTML(p, g)).join("")}
+    <div class="selector-botones">
+      <button type="button" class="btn btn-borde" data-selector="cancelar">Cancelar</button>
+      <button type="button" class="btn btn-rojo" data-selector="confirmar" ${todoListo ? "" : "disabled"}>${selector.uid === null ? "Agregar al pedido" : "Guardar cambios"}</button>
+    </div>`;
+  $("#selector-aviso").textContent = grupos.map(g => g.titulo + ": " + estadoGrupo(p, g) + ".").join(" ");
+}
+
+// "2 de 4" o "Sin gaseosa"
+function estadoGrupo(p, g) {
+  return selector.sin[g.clave] ? "Sin " + g.singular : totalElegido(g.clave) + " de " + p[g.campo];
+}
+
+// Un bloque de la ventana: título con el contador, una fila por sabor con "-", cantidad y "+", y el botón "No quiero"
+function bloqueGrupoHTML(p, g) {
+  const necesarias = p[g.campo];
+  const sin = selector.sin[g.clave];
+  const listo = grupoListo(p, g);
+  const opciones = disponiblesDe(g);
+
+  const filas = opciones.map(o => {
+    const n = selector.cantidades[g.clave][o.id] || 0;
+    // Con una sola a elegir el "+" siempre sirve (cambia la elección). Con varias, se bloquea al completar.
+    const bloquearMas = sin || (listo && necesarias > 1);
+    const datos = 'data-grupo="' + g.clave + '" data-sabor="' + esc(o.id) + '"';
     return `
       <li>
-        <span class="sabor-nombre">${esc(s.nombre)}</span>
-        <div class="cantidad" role="group" aria-label="Cantidad de ${esc(s.nombre)}">
-          <button type="button" data-sabor="${esc(s.id)}" data-delta="-1" aria-label="Quitar ${esc(s.nombre)}" ${n === 0 ? "disabled" : ""}>${iconoChico("menos")}</button>
+        <span class="sabor-nombre">${esc(o.nombre)}</span>
+        <div class="cantidad" role="group" aria-label="Cantidad de ${esc(o.nombre)}">
+          <button type="button" ${datos} data-delta="-1" aria-label="Quitar ${esc(o.nombre)}" ${n === 0 || sin ? "disabled" : ""}>${iconoChico("menos")}</button>
           <output>${n}</output>
-          <button type="button" data-sabor="${esc(s.id)}" data-delta="1" aria-label="Agregar ${esc(s.nombre)}" ${bloquearMas ? "disabled" : ""}>${iconoChico("mas")}</button>
+          <button type="button" ${datos} data-delta="1" aria-label="Agregar ${esc(o.nombre)}" ${bloquearMas ? "disabled" : ""}>${iconoChico("mas")}</button>
         </div>
       </li>`;
   }).join("");
 
-  const consigna = necesarias === 1 ? "Elegí 1 gaseosa." : "Elegí " + necesarias + " gaseosas. Se pueden repetir.";
-  $("#selector-caja").innerHTML = `
-    <h3 id="selector-titulo">Elegí tus gaseosas</h3>
-    <p class="ayuda">${esc(p.nombre)}. ${consigna}</p>
-    ${sabores.length > 0 ? '<ul class="sabores">' + filas + "</ul>" : '<p class="error">Hoy no hay gaseosas disponibles para este producto.</p>'}
-    <p class="contador-sabores">Elegiste ${elegidas} de ${necesarias}</p>
-    <div class="selector-botones">
-      <button type="button" class="btn btn-borde" data-selector="cancelar">Cancelar</button>
-      <button type="button" class="btn btn-rojo" data-selector="confirmar" ${completo ? "" : "disabled"}>${selector.uid === null ? "Agregar al pedido" : "Guardar cambios"}</button>
-    </div>`;
-  $("#selector-aviso").textContent = "Elegiste " + elegidas + " de " + necesarias + ".";
+  const consigna = sin
+    ? "Va sin " + g.singular + ". El precio es el mismo."
+    : (necesarias === 1 ? "Elegí 1." : "Elegí " + necesarias + ". Se pueden repetir.");
+  const etiquetaSin = "No quiero " + (necesarias === 1 ? g.singular : g.plural);
+  return `
+    <section class="bloque-opciones${sin ? " sin-elegir" : ""}" aria-labelledby="titulo-${g.clave}">
+      <div class="bloque-cabeza">
+        <h4 id="titulo-${g.clave}">${g.titulo}</h4>
+        <span class="contador-sabores${listo ? " listo" : ""}">${estadoGrupo(p, g)}</span>
+      </div>
+      <p class="ayuda">${consigna}</p>
+      ${opciones.length > 0 ? '<ul class="sabores">' + filas + "</ul>" : '<p class="error">Hoy no hay ' + g.plural + ' disponibles. Tocá "' + etiquetaSin + '" para seguir.</p>'}
+      <button type="button" class="sin-opcion" data-sin="${g.clave}" aria-pressed="${sin}">${etiquetaSin}</button>
+    </section>`;
 }
 
-// Suma o resta una gaseosa en la ventana
-function cambiarSabor(idSabor, cambio) {
-  const necesarias = productos[selector.id].gaseosasAElegir;
+// Suma o resta una gaseosa o salsa en la ventana
+function cambiarSabor(clave, idSabor, cambio) {
+  const g = GRUPOS.find(x => x.clave === clave);
+  const necesarias = productos[selector.id][g.campo];
+  const elegidas = selector.cantidades[clave];
+  if (selector.sin[clave]) return;
 
   if (necesarias === 1) {
-    // Con una sola gaseosa, tocar otra "+" reemplaza la anterior
-    if (cambio > 0) selector.cantidades = { [idSabor]: 1 };
-    else delete selector.cantidades[idSabor];
+    // Con una sola, tocar otro "+" reemplaza la anterior
+    if (cambio > 0) selector.cantidades[clave] = { [idSabor]: 1 };
+    else delete elegidas[idSabor];
   } else {
-    const nuevo = (selector.cantidades[idSabor] || 0) + cambio;
+    const nuevo = (elegidas[idSabor] || 0) + cambio;
     if (nuevo < 0) return;
-    if (cambio > 0 && totalElegido() >= necesarias) return;
-    if (nuevo === 0) delete selector.cantidades[idSabor]; else selector.cantidades[idSabor] = nuevo;
+    if (cambio > 0 && totalElegido(clave) >= necesarias) return;
+    if (nuevo === 0) delete elegidas[idSabor]; else elegidas[idSabor] = nuevo;
   }
   dibujarSelector();
 
-  // Al redibujar se pierde el foco: volvemos al mismo botón (o al otro de la misma gaseosa si quedó bloqueado)
-  const mismo = $('#selector-caja [data-sabor="' + idSabor + '"][data-delta="' + cambio + '"]');
-  const otro = $('#selector-caja [data-sabor="' + idSabor + '"]:not([disabled])');
+  // Al redibujar se pierde el foco: volvemos al mismo botón (o al otro del mismo sabor si quedó bloqueado)
+  const filtro = '[data-grupo="' + clave + '"][data-sabor="' + idSabor + '"]';
+  const mismo = $("#selector-caja " + filtro + '[data-delta="' + cambio + '"]');
+  const otro = $("#selector-caja " + filtro + ":not([disabled])");
   const destino = (mismo && !mismo.disabled) ? mismo : otro;
   if (destino) destino.focus();
+}
+
+// Botón "No quiero gaseosa" / "No quiero salsa": lo prende o lo apaga. Al prenderlo se borra lo que se había elegido.
+function alternarSin(clave) {
+  selector.sin[clave] = !selector.sin[clave];
+  if (selector.sin[clave]) selector.cantidades[clave] = {};
+  dibujarSelector();
+  const boton = $('#selector-caja [data-sin="' + clave + '"]');
+  if (boton) boton.focus();
 }
 
 // Guarda lo elegido en el carrito (como renglón nuevo o cambiando el renglón que se estaba editando)
 function confirmarSelector() {
   const p = productos[selector.id];
-  if (totalElegido() !== p.gaseosasAElegir) return;
+  if (!gruposDe(p).every(g => grupoListo(p, g))) return;
 
   // De { "beb-coca": 2, "beb-sprite": 1 } pasamos a la lista [ "beb-coca", "beb-coca", "beb-sprite" ]
-  const lista = [];
-  for (const idGaseosa in selector.cantidades) {
-    for (let i = 0; i < selector.cantidades[idGaseosa]; i++) lista.push(idGaseosa);
-  }
+  const eleccion = { gaseosas: [], salsas: [], sinGaseosa: false, sinSalsa: false };
+  gruposDe(p).forEach(g => {
+    eleccion[g.sin] = selector.sin[g.clave];
+    for (const idOpcion in selector.cantidades[g.clave]) {
+      for (let i = 0; i < selector.cantidades[g.clave][idOpcion]; i++) eleccion[g.clave].push(idOpcion);
+    }
+  });
 
   const { id, uid, origen } = selector;   // los copiamos antes de cerrar, porque al cerrar "selector" se vacía
   const tarjeta = origen ? origen.closest(".tarjeta") : null;
   $("#selector").close();
 
+  let combo;
   if (uid === null) {
     if (tarjeta) volarAlCarrito(origen);   // animación: se hace antes de redibujar
-    combos.push({ uid: siguienteUid++, id: id, gaseosas: lista });
+    combo = Object.assign({ uid: siguienteUid++, id: id }, eleccion);
+    combos.push(combo);
   } else {
-    const combo = combos.find(c => c.uid === uid);
-    if (combo) combo.gaseosas = lista;
+    combo = combos.find(c => c.uid === uid);
+    if (combo) Object.assign(combo, eleccion);
   }
   guardarCarrito();
   actualizarTodo();
-  anunciar(productos[id].nombre + " con " + textoGaseosas(lista) + ". Total " + dinero.format(calcularTotal()) + ".");
+  if (combo) anunciar(productos[id].nombre + ". " + textoOpciones(combo) + ". Total " + dinero.format(calcularTotal()) + ".");
 
   if (tarjeta) devolverFoco(id, "sumar", tarjeta);
   else {
@@ -606,15 +707,17 @@ function actualizarTodo() {
         </div>
       </li>`;
   }
-  // Productos con gaseosas: un renglón por unidad, con el detalle y los botones para cambiarlo o quitarlo
+  // Productos con gaseosas y salsas: un renglón por unidad, con lo elegido y los botones para cambiarlo o quitarlo
   combos.forEach(c => {
     const p = productos[c.id];
+    const elegido = gruposDe(p).map(g => '<div class="sub">' + esc(textoGrupo(c, g)) + "</div>").join("");
+    const que = gruposDe(p).map(g => g.plural).join(" y ");
     lineas += `
       <li>
-        <div><b>${esc(p.nombre)}</b><div class="sub">${esc(textoGaseosas(c.gaseosas))}</div></div>
+        <div><b>${esc(p.nombre)}</b>${elegido}</div>
         <div class="importe">${dinero.format(p.precio)}</div>
         <div class="acciones-linea">
-          <button type="button" class="copiar" data-editar-combo="${c.uid}">Cambiar gaseosas</button>
+          <button type="button" class="copiar" data-editar-combo="${c.uid}" aria-label="Cambiar ${que} de ${esc(p.nombre)}">Cambiar elección</button>
           <button type="button" class="copiar" data-quitar-combo="${c.uid}" aria-label="Quitar ${esc(p.nombre)} del pedido">Quitar</button>
         </div>
       </li>`;
@@ -681,8 +784,11 @@ function validarFormulario() {
 function leerPedidoDelFormulario() {
   const f = $("#formulario").elements;
   const items = [];
-  for (const id in carrito) items.push({ productoId: id, cantidad: carrito[id], gaseosas: [] });
-  combos.forEach(c => items.push({ productoId: c.id, cantidad: 1, gaseosas: c.gaseosas }));
+  for (const id in carrito) items.push({ productoId: id, cantidad: carrito[id], gaseosas: [], salsas: [] });
+  combos.forEach(c => items.push({
+    productoId: c.id, cantidad: 1,
+    gaseosas: c.gaseosas, salsas: c.salsas, sinGaseosa: c.sinGaseosa, sinSalsa: c.sinSalsa
+  }));
   return {
     nombre: f.nombre.value.trim(),
     telefono: f.telefono.value.trim(),
@@ -726,7 +832,7 @@ async function enviarPedido(datos) {
 function pedidoDeEjemplo(datos) {
   const lineas = datos.items.map(i => ({
     nombre: productos[i.productoId].nombre, cantidad: i.cantidad, precio: productos[i.productoId].precio,
-    detalle: (i.gaseosas && i.gaseosas.length > 0) ? textoGaseosas(i.gaseosas) : null
+    detalle: tieneOpciones(productos[i.productoId]) ? textoOpciones(Object.assign({ id: i.productoId }, i)) : null
   }));
   const subtotal = lineas.reduce((suma, l) => suma + l.precio * l.cantidad, 0);
   const zona = menu.zonas.find(z => z.id === datos.zonaId);
@@ -809,7 +915,7 @@ function cerrarCajon() {
 
 // Mantiene el foco del teclado dentro del cajón mientras está abierto
 function atraparFoco(evento) {
-  if ($("#selector").open) return;   // la ventana de gaseosas maneja sola el foco y la tecla Escape
+  if ($("#selector").open) return;   // la ventana de gaseosas y salsas maneja sola el foco y la tecla Escape
   if ($("#cajon").hidden) return;
   if (evento.key === "Escape") { cerrarCajon(); return; }
   if (evento.key !== "Tab") return;
@@ -1019,9 +1125,11 @@ document.addEventListener("error", evento => {
 document.addEventListener("click", evento => {
   if (evento.target.closest("[data-reintentar]")) { refrescarFranjas(); return; }
 
-  // Ventana de gaseosas y renglones de combos
+  // Ventana de gaseosas y salsas, y renglones de combos
   const sabor = evento.target.closest("[data-sabor]");
-  if (sabor) { cambiarSabor(sabor.dataset.sabor, Number(sabor.dataset.delta)); return; }
+  if (sabor) { cambiarSabor(sabor.dataset.grupo, sabor.dataset.sabor, Number(sabor.dataset.delta)); return; }
+  const sinOpcion = evento.target.closest("[data-sin]");
+  if (sinOpcion) { alternarSin(sinOpcion.dataset.sin); return; }
   const accionSelector = evento.target.closest("[data-selector]");
   if (accionSelector) {
     if (accionSelector.dataset.selector === "confirmar") confirmarSelector();
@@ -1066,7 +1174,7 @@ $("#velo").addEventListener("click", cerrarCajon);
 $("#vacio-cerrar").addEventListener("click", () => { cerrarCajon(); $("#carta").scrollIntoView(); });
 document.addEventListener("keydown", atraparFoco);
 
-// Ventana de gaseosas: se cierra tocando el fondo oscuro, y al cerrarse (también con Escape) se limpia lo elegido
+// Ventana de gaseosas y salsas: se cierra tocando el fondo oscuro, y al cerrarse (también con Escape) se limpia lo elegido
 $("#selector").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 $("#selector").addEventListener("close", () => { selector = null; });
 

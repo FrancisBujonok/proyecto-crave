@@ -16,6 +16,7 @@ public class CraveDb : DbContext, IDataProtectionKeyContext
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<PedidoItem> PedidoItems => Set<PedidoItem>();
     public DbSet<Configuracion> Configuraciones => Set<Configuracion>();   // una sola fila: la configuración del local
+    public DbSet<Salsa> Salsas => Set<Salsa>();   // las salsas que se eligen dentro de los combos
 
     // Claves con las que ASP.NET firma la cookie de sesión del panel. Se guardan en la base
     // porque el servidor de Render se borra y se recrea en cada deploy: si las claves vivieran en el disco,
@@ -32,6 +33,7 @@ public class CraveDb : DbContext, IDataProtectionKeyContext
         modelo.Entity<PedidoItem>().ToTable("pedido_items");
         modelo.Entity<DataProtectionKey>().ToTable("claves_sesion");
         modelo.Entity<Configuracion>().ToTable("configuracion");
+        modelo.Entity<Salsa>().ToTable("salsas");
         modelo.Entity<Configuracion>().Property(c => c.Id).ValueGeneratedNever();   // el id siempre es 1, no lo numera la base
 
         // Una categoría tiene muchos productos

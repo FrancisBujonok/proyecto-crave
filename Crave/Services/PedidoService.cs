@@ -45,52 +45,42 @@ public class PedidoService
     // Así, si en el panel se marca una gaseosa como agotada, deja de ofrecerse en todos los combos.
     const string CategoriaBebidas = "bebidas";
 
-    // Trae las gaseosas de la base. Devuelve un diccionario: id -> producto.
-    async Task<Dictionary<string, Producto>> BuscarGaseosas()
+    // Trae las gaseosas de la base. Devuelve un diccionario: id -> (nombre, agotada).
+    // Una gaseosa "Próximamente" tampoco se puede elegir, así que cuenta como agotada.
+    async Task<Dictionary<string, Opciones.Opcion>> BuscarGaseosas()
     {
-        return await _db.Productos.Where(p => p.CategoriaId == CategoriaBebidas).ToDictionaryAsync(p => p.Id);
+        var bebidas = await _db.Productos.Where(p => p.CategoriaId == CategoriaBebidas).ToListAsync();
+        return bebidas.ToDictionary(p => p.Id, p => new Opciones.Opcion(p.Nombre, p.Agotado || p.Proximamente));
     }
 
-    // Revisa las gaseosas elegidas en un renglón. Un producto con "gaseosas a elegir" necesita
-    // exactamente GaseosasAElegir x Cantidad gaseosas, y cada una tiene que existir y no estar agotada.
-    static void ValidarGaseosas(ItemPedido item, Producto producto, Dictionary<string, Producto> gaseosas, List<string> errores)
+    // Trae las salsas de la base (tabla "salsas"). Devuelve un diccionario: id -> (nombre, agotada).
+    async Task<Dictionary<string, Opciones.Opcion>> BuscarSalsas()
     {
-        var elegidas = item.Gaseosas ?? new List<string>();   // si el JSON trae null, lo tratamos como lista vacía
-
-        if (producto.GaseosasAElegir == 0)
-        {
-            if (elegidas.Count > 0)
-                errores.Add(producto.Nombre + " no lleva gaseosa a elección.");
-            return;
-        }
-
-        if (elegidas.Count != producto.GaseosasAElegir * item.Cantidad)
-        {
-            errores.Add("Elegí las gaseosas de " + producto.Nombre + ".");
-            return;
-        }
-
-        foreach (var id in elegidas)
-        {
-            if (id == null || !gaseosas.TryGetValue(id, out var gaseosa))
-                errores.Add("Hay una gaseosa que ya no está en la carta.");
-            else if (gaseosa.Agotado)
-                errores.Add(gaseosa.Nombre + " está agotada.");
-        }
+        var salsas = await _db.Salsas.ToListAsync();
+        return salsas.ToDictionary(s => s.Id, s => new Opciones.Opcion(s.Nombre, s.Agotado));
     }
 
-    // Convierte las gaseosas elegidas en el texto que se guarda y se muestra.
-    // Ejemplo: [coca, coca, sprite] -> "2 × Coca-Cola, 1 × Sprite". Con una sola gaseosa: solo el nombre.
-    static string? ArmarDetalle(List<string>? elegidas, Dictionary<string, Producto> gaseosas)
+    // Revisa las gaseosas y las salsas elegidas en un renglón. Las reglas están en Opciones.Validar:
+    // hacen falta exactamente (las de cada unidad) x Cantidad, o "No quiero...", y ninguna puede estar agotada.
+    static void ValidarOpciones(ItemPedido item, Producto producto, Dictionary<string, Opciones.Opcion> gaseosas,
+        Dictionary<string, Opciones.Opcion> salsas, List<string> errores)
     {
-        if (elegidas == null || elegidas.Count == 0) return null;
-        if (elegidas.Count == 1) return gaseosas[elegidas[0]].Nombre;
+        Opciones.Validar(producto.Nombre, producto.GaseosasAElegir, item.Cantidad, item.Gaseosas, item.SinGaseosa, gaseosas, Opciones.Gaseosas, errores);
+        Opciones.Validar(producto.Nombre, producto.SalsasAElegir, item.Cantidad, item.Salsas, item.SinSalsa, salsas, Opciones.Salsas, errores);
+    }
 
-        // GroupBy junta las repetidas y mantiene el orden en que aparecen
-        var partes = elegidas
-            .GroupBy(id => id)
-            .Select(grupo => grupo.Count() + " × " + gaseosas[grupo.Key].Nombre);
-        return string.Join(", ", partes);
+    // El texto que se guarda en pedido_items.detalle y se ve en el panel, en la confirmación y en el WhatsApp.
+    // Ejemplo: "Gaseosas: 2 × Coca-Cola, 1 × Sprite, 1 × Fanta; Salsas: 3 × CRAVE, 1 × Hot mayo".
+    // null si el producto no lleva gaseosas ni salsas.
+    static string? ArmarDetalle(ItemPedido item, Producto producto, Dictionary<string, Opciones.Opcion> gaseosas,
+        Dictionary<string, Opciones.Opcion> salsas)
+    {
+        var partes = new List<string>();
+        if (producto.GaseosasAElegir > 0)
+            partes.Add(Opciones.Texto(item.Gaseosas, item.SinGaseosa, gaseosas, Opciones.Gaseosas));
+        if (producto.SalsasAElegir > 0)
+            partes.Add(Opciones.Texto(item.Salsas, item.SinSalsa, salsas, Opciones.Salsas));
+        return partes.Count == 0 ? null : string.Join("; ", partes);
     }
 
     static int CalcularSubtotal(PedidoNuevo pedido, Dictionary<string, Producto> productos, bool promoActiva)
@@ -115,6 +105,7 @@ public class PedidoService
 
         var productos = await BuscarProductos(pedido);
         var gaseosas = await BuscarGaseosas();
+        var salsas = await BuscarSalsas();
         var zona = await BuscarZona(pedido);
         bool abierto = await _horarios.LocalAbierto();
         bool promoActiva = await PromoActiva();
@@ -148,9 +139,9 @@ public class PedidoService
             else if (producto.Agotado)
                 errores.Add(producto.Nombre + " está agotado.");
 
-            // Las gaseosas solo se revisan si la cantidad es razonable (evita cuentas con números enormes)
+            // Las gaseosas y salsas solo se revisan si la cantidad es razonable (evita cuentas con números enormes)
             if (cantidadValida)
-                ValidarGaseosas(item, producto, gaseosas, errores);
+                ValidarOpciones(item, producto, gaseosas, salsas, errores);
         }
 
         // Un mismo producto puede llegar en varios renglones (ej.: dos combos con gaseosas distintas).
@@ -202,6 +193,7 @@ public class PedidoService
     {
         var productos = await BuscarProductos(pedido);
         var gaseosas = await BuscarGaseosas();
+        var salsas = await BuscarSalsas();
         var zona = await BuscarZona(pedido);   // Validar ya revisó que el barrio exista
         bool promoActiva = await PromoActiva();
 
@@ -249,7 +241,7 @@ public class PedidoService
                 Nombre = producto.Nombre,
                 Cantidad = item.Cantidad,
                 Precio = Precios.Cobrar(producto, promoActiva),   // se guarda el precio que se cobró (con o sin promo)
-                Detalle = ArmarDetalle(item.Gaseosas, gaseosas)   // null si el producto no lleva gaseosas a elegir
+                Detalle = ArmarDetalle(item, producto, gaseosas, salsas)   // null si el producto no lleva gaseosas ni salsas
             });
         }
 

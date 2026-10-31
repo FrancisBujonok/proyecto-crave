@@ -24,4 +24,7 @@ public class Producto
     // Cuántas gaseosas elige el cliente al pedir este producto. 0 = ninguna (la mayoría de los productos).
     // Ejemplo: "Familiar para 4" tiene 4, el menú niños tiene 1. Las opciones salen de la categoría "bebidas".
     public int GaseosasAElegir { get; set; }
+
+    // Cuántas salsas elige el cliente (una por persona, como las gaseosas). 0 = ninguna. Las opciones salen de la tabla "salsas".
+    public int SalsasAElegir { get; set; }
 }

@@ -17,7 +17,9 @@
 --     "Activar precios de lanzamiento", el día que abran.
 --   - No toca pedidos ni zonas, ni las fotos que ya tengan los productos, ni el "agotado" de cada uno
 --     (salvo los tacos, que dejan de figurar como agotados porque ahora dicen "Próximamente").
--- Se puede correr más de una vez.
+-- YA ESTÁ APLICADO EN SUPABASE: NO LO VUELVAS A CORRER. Los archivos 10, 11 y 12 cambiaron después
+-- las gaseosas, las descripciones y las salsas, y este archivo las volvería a como estaban antes.
+-- Para armar la carta completa desde cero (en una base nueva) está sql/02-menu-real.sql.
 -- =====================================================================
 
 -- ---------- 1) Columnas nuevas ----------

@@ -11,6 +11,13 @@ public class ItemPedido
     // Solo para productos con "gaseosas a elegir": el id de cada gaseosa elegida (se pueden repetir).
     // Ejemplo para un Familiar para 4: [ "beb-coca", "beb-coca", "beb-sprite", "beb-fanta" ]
     public List<string> Gaseosas { get; set; } = new();
+
+    // Lo mismo para las salsas. Ejemplo: [ "sal-crave", "sal-crave", "sal-hotmayo", "sal-honey" ]
+    public List<string> Salsas { get; set; } = new();
+
+    // true = el cliente tocó "No quiero gaseosa" / "No quiero salsa". Entonces la lista correspondiente viene vacía.
+    public bool SinGaseosa { get; set; }
+    public bool SinSalsa { get; set; }
 }
 
 // Todos los pedidos son con envío a domicilio: no hay retiro en el local, así que siempre hay dirección y barrio.

@@ -9,7 +9,8 @@ namespace Crave.Models;
 public record CartaPublica(
     bool PromoActiva,                 // true = la semana de lanzamiento está prendida desde el panel
     List<CategoriaCarta> Categorias,
-    List<Zona> Zonas);
+    List<Zona> Zonas,
+    List<Salsa> Salsas);              // las salsas para elegir dentro de los combos (con su "agotado")
 
 public record CategoriaCarta(
     string Id,
@@ -34,4 +35,5 @@ public record ProductoCarta(
     bool Proximamente,
     bool Destacado,
     int Orden,
-    int GaseosasAElegir);
+    int GaseosasAElegir,
+    int SalsasAElegir);

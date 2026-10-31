@@ -53,6 +53,12 @@ public static class AdminPanelEndpoints
         // Marcar o desmarcar "agotado". Body: { "agotado": true }
         admin.MapPatch("/productos/{id}/agotado", async (string id, CambioAgotado cambio, IAdminService servicio) =>
             Responder(await servicio.CambiarAgotado(id, cambio.Agotado)));
+
+        // Salsas: lista y "agotada". Body: { "agotado": true }
+        admin.MapGet("/salsas", async (IAdminService servicio) =>
+            Results.Ok(await servicio.Salsas()));
+        admin.MapPatch("/salsas/{id}/agotado", async (string id, CambioAgotado cambio, IAdminService servicio) =>
+            Responder(await servicio.CambiarSalsaAgotada(id, cambio.Agotado)));
     }
 
     // 200 si salió bien; si no, el código que corresponde (404, 409) con el motivo

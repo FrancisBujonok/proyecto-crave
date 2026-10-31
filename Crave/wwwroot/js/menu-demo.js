@@ -26,7 +26,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": true,
           "orden": 1,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "ind-popcrave",
@@ -43,7 +44,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "ind-papas-ch",
@@ -60,7 +62,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "ind-aros",
@@ -77,7 +80,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 4,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         }
       ]
     },
@@ -103,7 +107,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": true,
           "orden": 1,
-          "gaseosasAElegir": 2
+          "gaseosasAElegir": 2,
+          "salsasAElegir": 2
         },
         {
           "id": "cmp-pollo12",
@@ -120,7 +125,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": true,
           "orden": 2,
-          "gaseosasAElegir": 3
+          "gaseosasAElegir": 3,
+          "salsasAElegir": 3
         }
       ]
     },
@@ -146,7 +152,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": true,
           "orden": 1,
-          "gaseosasAElegir": 4
+          "gaseosasAElegir": 4,
+          "salsasAElegir": 4
         },
         {
           "id": "fam-5",
@@ -163,7 +170,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 5
+          "gaseosasAElegir": 5,
+          "salsasAElegir": 5
         },
         {
           "id": "fam-6",
@@ -180,7 +188,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 6
+          "gaseosasAElegir": 6,
+          "salsasAElegir": 6
         }
       ]
     },
@@ -206,7 +215,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 1,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "nin-simple",
@@ -223,7 +233,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "nin-fresh",
@@ -240,7 +251,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "nin-crispy",
@@ -257,7 +269,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 4,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "nin-sweet",
@@ -274,7 +287,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 5,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         }
       ]
     },
@@ -300,7 +314,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 1,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "ham-sweet",
@@ -317,7 +332,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         },
         {
           "id": "ham-crispy",
@@ -334,7 +350,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 1
+          "gaseosasAElegir": 1,
+          "salsasAElegir": 1
         }
       ]
     },
@@ -360,7 +377,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 1,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "beb-sprite",
@@ -377,7 +395,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "beb-fanta",
@@ -394,7 +413,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "beb-zero",
@@ -411,7 +431,8 @@ const MENU_DEMO = {
           "proximamente": false,
           "destacado": false,
           "orden": 4,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         }
       ]
     },
@@ -437,7 +458,8 @@ const MENU_DEMO = {
           "proximamente": true,
           "destacado": false,
           "orden": 1,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "tac-carne",
@@ -454,7 +476,8 @@ const MENU_DEMO = {
           "proximamente": true,
           "destacado": false,
           "orden": 2,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "tac-combo3",
@@ -471,7 +494,8 @@ const MENU_DEMO = {
           "proximamente": true,
           "destacado": false,
           "orden": 3,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         },
         {
           "id": "tac-combo6",
@@ -488,7 +512,8 @@ const MENU_DEMO = {
           "proximamente": true,
           "destacado": false,
           "orden": 4,
-          "gaseosasAElegir": 0
+          "gaseosasAElegir": 0,
+          "salsasAElegir": 0
         }
       ]
     }
@@ -543,6 +568,32 @@ const MENU_DEMO = {
       "id": "zona-sur",
       "nombre": "Zona Sur",
       "costo": 2000
+    }
+  ],
+  "salsas": [
+    {
+      "id": "sal-chickfila",
+      "nombre": "Chick-fil-A",
+      "agotado": false,
+      "orden": 1
+    },
+    {
+      "id": "sal-crave",
+      "nombre": "CRAVE",
+      "agotado": false,
+      "orden": 2
+    },
+    {
+      "id": "sal-honey",
+      "nombre": "Honey gold",
+      "agotado": false,
+      "orden": 3
+    },
+    {
+      "id": "sal-hotmayo",
+      "nombre": "Hot mayo",
+      "agotado": false,
+      "orden": 4
     }
   ]
 };

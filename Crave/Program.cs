@@ -59,9 +59,10 @@ app.MapGet("/api/menu", async (CraveDb db, IConfigService config) =>
         .OrderBy(c => c.Orden)
         .ToListAsync();
     var zonas = await db.Zonas.OrderBy(z => z.Costo).ThenBy(z => z.Nombre).ToListAsync();   // barrios: primero los más cercanos (envío más barato)
+    var salsas = await db.Salsas.OrderBy(s => s.Orden).ToListAsync();   // para la ventana de elección de los combos
     bool promoActiva = (await config.Obtener()).PromoActiva;
 
-    return ArmarCarta.Desde(categorias, zonas, promoActiva);
+    return ArmarCarta.Desde(categorias, zonas, salsas, promoActiva);
 }).RequireRateLimiting(Limites.PoliticaLectura);
 
 // Para monitores externos (UptimeRobot, etc.): responde 200 si el servidor y la base funcionan, 503 si la base falla.

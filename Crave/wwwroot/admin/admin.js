@@ -26,6 +26,7 @@ const $ = (id) => document.getElementById(id);
 // ---------- Estado de la pantalla ----------
 let pedidos = [];
 let productos = [];
+let salsas = [];              // las salsas de los combos (se marcan agotadas igual que los productos)
 let config = null;            // configuración del local (abierto/cerrado, horarios, cupo...)
 let vista = "pedidos";        // "pedidos", "productos" o "config"
 let filtro = "activos";       // "activos", "sinpago", "entregado", "cancelado" o "todos"
@@ -165,9 +166,11 @@ async function cargarPedidos() {
 }
 
 async function cargarProductos() {
-  const { ok, datos } = await api("/productos");
-  if (!ok) throw new Error("fallo");
-  productos = datos;
+  // Las dos listas a la vez: Promise.all espera a que lleguen ambas
+  const [respuestaProductos, respuestaSalsas] = await Promise.all([api("/productos"), api("/salsas")]);
+  if (!respuestaProductos.ok || !respuestaSalsas.ok) throw new Error("fallo");
+  productos = respuestaProductos.datos;
+  salsas = respuestaSalsas.datos;
   dibujarProductos();
 }
 
@@ -475,6 +478,17 @@ function dibujarProductos() {
       '</div>'
     ).join("") + '</div>';
   });
+
+  // Las salsas van al final, en su propio grupo. Usan otra dirección del servidor (/salsas), por eso otra data-accion.
+  if (salsas.length > 0) {
+    html += '<div class="grupo"><h2>Salsas de los combos</h2>' + salsas.map(s =>
+      '<div class="producto' + (s.agotado ? ' agotado' : '') + '">' +
+      '<span class="producto-nombre">' + esc(s.nombre) + '<span class="producto-precio">Se elige dentro de los combos</span></span>' +
+      '<button type="button" class="interruptor" role="switch" aria-checked="' + s.agotado + '" aria-label="Agotada: ' + esc(s.nombre) + '" ' +
+      'data-accion="salsa-agotada" data-id="' + esc(s.id) + '" data-agotado="' + (!s.agotado) + '">' + (s.agotado ? 'Agotada' : 'Disponible') + '</button>' +
+      '</div>'
+    ).join("") + '</div>';
+  }
   $("lista-productos").innerHTML = html || '<p class="vacio">No hay productos.</p>';
 }
 
@@ -518,6 +532,13 @@ async function cambiarPromo(activa) {
   const { ok, datos } = await api("/configuracion/promo", "PATCH", { activa });
   if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar los precios.");
   await cargarConfig(false);
+}
+
+// Marca una salsa como agotada (o la vuelve a habilitar)
+async function cambiarSalsaAgotada(id, agotado) {
+  const { ok, datos } = await api("/salsas/" + encodeURIComponent(id) + "/agotado", "PATCH", { agotado });
+  if (!ok) mostrarAviso((datos && datos.error) || "No se pudo cambiar la salsa.");
+  await cargarProductos();
 }
 
 async function cambiarAgotado(id, agotado) {
@@ -591,6 +612,10 @@ $("panel").addEventListener("click", async (evento) => {
       ocupado = true;
       mostrarAviso("");
       await cambiarAgotado(boton.dataset.id, boton.dataset.agotado === "true");
+    } else if (accion === "salsa-agotada") {
+      ocupado = true;
+      mostrarAviso("");
+      await cambiarSalsaAgotada(boton.dataset.id, boton.dataset.agotado === "true");
     }
   } catch (error) {
     if (error.message !== "sin-sesion") mostrarAviso("No hay conexión. Probá de nuevo.");

@@ -121,6 +121,27 @@ public class AdminService : IAdminService
         return ResultadoAdmin.Hecho();
     }
 
+    // Las salsas, en el orden de la ventana de elección
+    public async Task<List<Salsa>> Salsas()
+    {
+        return await _db.Salsas.OrderBy(s => s.Orden).ToListAsync();
+    }
+
+    // Marca una salsa como agotada (o la vuelve a habilitar). Deja de ofrecerse en todos los combos al recargar la carta.
+    public async Task<ResultadoAdmin> CambiarSalsaAgotada(string id, bool agotado)
+    {
+        var salsa = await _db.Salsas.FirstOrDefaultAsync(s => s.Id == id);
+        if (salsa == null)
+            return ResultadoAdmin.NoExiste("Esa salsa no existe.");
+
+        if (salsa.Agotado != agotado)
+        {
+            salsa.Agotado = agotado;
+            await _db.SaveChangesAsync();
+        }
+        return ResultadoAdmin.Hecho();
+    }
+
     // Convierte la fila de la base en lo que se manda al panel
     static PedidoAdmin ConvertirPedido(Pedido p, DateTime ahoraUtc, int minutosPagoDemorado)
     {

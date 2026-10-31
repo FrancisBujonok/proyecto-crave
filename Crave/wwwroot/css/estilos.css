@@ -78,10 +78,10 @@ img, svg { max-width: 100%; }
    Ojo: clip-path también recorta el contorno de foco (outline) que está AFUERA del elemento, por eso estos
    elementos dibujan el foco ADENTRO (ver :focus-visible más abajo). */
 .btn, .boton-pedido, .pastilla, .insignia, .pausa, .tarjeta, .mas, .cantidad, .chip-agotado,
-.pildora, .pildora-total, .cerrar, .copiar, .paso, .selector, .btn-borde::before {
+.pildora, .pildora-total, .cerrar, .copiar, .sin-opcion, .paso, .selector, .btn-borde::before {
   clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
 }
-.btn, .boton-pedido, .pildora, .copiar { --c: var(--corte-chico); }
+.btn, .boton-pedido, .pildora, .copiar, .sin-opcion { --c: var(--corte-chico); }
 .pastilla, .insignia, .pausa, .mas, .cantidad, .chip-agotado, .cerrar, .pildora-total { --c: var(--corte-mini); }
 .tarjeta, .paso, .selector { --c: var(--corte); }
 
@@ -99,7 +99,7 @@ img, svg { max-width: 100%; }
 }
 
 /* Foco por teclado: adentro del botón (si fuera afuera, el recorte lo taparía) */
-:is(.btn, .boton-pedido, .pastilla, .mas, .cantidad button, .copiar, .cerrar, .pausa, .pildora):focus-visible {
+:is(.btn, .boton-pedido, .pastilla, .mas, .cantidad button, .copiar, .sin-opcion, .cerrar, .pausa, .pildora):focus-visible {
   outline: 3px solid currentColor; outline-offset: -6px;
 }
 
@@ -497,7 +497,7 @@ input:hover, select:hover, textarea:hover { border-color: var(--linea-fuerte); }
   transform: rotate(var(--r)); animation: caer 2s var(--d) cubic-bezier(.3, .5, .6, 1) forwards;
 }
 
-/* ---------- 11b. VENTANA DE GASEOSAS ---------- */
+/* ---------- 11b. VENTANA DE GASEOSAS Y SALSAS ---------- */
 /* El <dialog> no tiene relleno: así un toque en el fondo oscuro es un toque en el <dialog> mismo y la cerramos. */
 .selector {
   width: min(calc(100% - 32px), 420px); max-height: calc(100dvh - 32px); padding: 0; overflow: hidden;
@@ -510,11 +510,31 @@ input:hover, select:hover, textarea:hover { border-color: var(--linea-fuerte); }
 .sabores li:last-child { border-bottom: 0; }
 .sabor-nombre { font-weight: 600; }
 .contador-sabores { color: var(--apagado); font-weight: 600; font-variant-numeric: tabular-nums; }
-.selector-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Un bloque por grupo (Gaseosas, Salsas), separados por una raya */
+.bloque-opciones { display: grid; gap: 6px; padding-top: 14px; border-top: 1.5px solid var(--linea); }
+.bloque-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.bloque-cabeza h4 { margin: 0; font-family: var(--fuente-titulo); font-weight: 900; text-transform: uppercase; font-size: 1.0625rem; letter-spacing: .02em; }
+.contador-sabores.listo { color: var(--texto); }   /* el grupo ya está completo */
+.sin-elegir .sabores { opacity: .4; }               /* con "No quiero ..." los sabores quedan apagados */
+
+/* Botón "No quiero gaseosa" / "No quiero salsa". Apretado (aria-pressed="true") queda blanco, como la pastilla elegida. */
+.sin-opcion {
+  justify-self: start; min-height: 44px; margin-top: 4px; padding: 8px 16px;
+  background: var(--tarjeta-2); color: var(--apagado); border: 0; border-radius: 0; font-weight: 700;
+  transition: background-color .15s ease-out, color .15s ease-out;
+}
+.sin-opcion:hover { background: var(--linea); color: var(--texto); }
+.sin-opcion[aria-pressed="true"] { background: var(--texto); color: var(--fondo); }
+/* Con gaseosas y salsas la ventana es larga: los botones quedan pegados abajo mientras se baja por la lista */
+.selector-botones {
+  position: sticky; bottom: -18px; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin: 0 -18px -18px; padding: 12px 18px 18px; background: var(--tarjeta); border-top: 1.5px solid var(--linea);
+}
 .selector .btn[disabled] { opacity: .45; cursor: not-allowed; }
 .cantidad button[disabled] { opacity: .35; cursor: not-allowed; }
 
-/* Botones "Cambiar gaseosas" y "Quitar" debajo de cada combo en el cajón */
+/* Botones "Cambiar elección" y "Quitar" debajo de cada combo en el cajón */
 .acciones-linea { display: flex; flex-wrap: wrap; gap: 8px; }
 .lineas-pedido .acciones-linea { grid-column: 1 / -1; }
 

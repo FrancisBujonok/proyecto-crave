@@ -2,11 +2,11 @@ using Crave.Models;
 
 namespace Crave.Services;
 
-// Convierte las filas de la base (categorías, productos y zonas) en la carta que ve el cliente.
+// Convierte las filas de la base (categorías, productos, zonas y salsas) en la carta que ve el cliente.
 // No toca la base: recibe las listas ya cargadas, así se puede probar sola.
 public static class ArmarCarta
 {
-    public static CartaPublica Desde(List<Categoria> categorias, List<Zona> zonas, bool promoActiva)
+    public static CartaPublica Desde(List<Categoria> categorias, List<Zona> zonas, List<Salsa> salsas, bool promoActiva)
     {
         var lista = new List<CategoriaCarta>();
         foreach (var categoria in categorias.OrderBy(c => c.Orden))
@@ -17,7 +17,7 @@ public static class ArmarCarta
                 .ToList();
             lista.Add(new CategoriaCarta(categoria.Id, categoria.Nombre, categoria.Nota, categoria.Icono, categoria.Orden, productos));
         }
-        return new CartaPublica(promoActiva, lista, zonas);
+        return new CartaPublica(promoActiva, lista, zonas, salsas.OrderBy(s => s.Orden).ToList());
     }
 
     static ProductoCarta ConvertirProducto(Producto p, bool promoActiva)
@@ -30,6 +30,6 @@ public static class ArmarCarta
             p.Id, p.CategoriaId, p.Nombre, p.Descripcion,
             precio, antes, descuento,
             p.Icono, p.Imagen, p.Etiqueta,
-            p.Agotado, p.Proximamente, p.Destacado, p.Orden, p.GaseosasAElegir);
+            p.Agotado, p.Proximamente, p.Destacado, p.Orden, p.GaseosasAElegir, p.SalsasAElegir);
     }
 }

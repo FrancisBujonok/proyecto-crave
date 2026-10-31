@@ -52,6 +52,9 @@ Si `dotnet run` muestra un error, copiá el mensaje completo y mandámelo.
 | `sql/09-envios-y-horarios.sql` | Carga los barrios con su costo de envío y deja los horarios de 20:00 a 22:30, cada 30 minutos, 5 pedidos por horario. |
 | `sql/10-incluye-y-fotos.sql` | Gaseosas a elección en combos y hamburguesas, y la foto del Familiar para 6. (También creaba la columna `incluye`, que ya no se usa: la borra el 11.) |
 | `sql/11-descripciones-sin-gaseosa.sql` | Saca la gaseosa de las descripciones (ahora la dice el cartelito) y borra la columna `incluye`. Correrlo DESPUÉS de subir el código. |
+| `sql/12-salsas.sql` | Crea la tabla `salsas` (4 sabores) y la columna `productos.salsas_a_elegir` (una por persona, igual que las gaseosas). Correrlo ANTES de subir el código de las salsas. |
+| `Services/Opciones.cs` | Las reglas de las gaseosas y salsas que se eligen dentro de un combo (cuántas, "No quiero...", agotadas) y el texto del detalle. |
+| `Models/Salsa.cs` | Una fila de la tabla `salsas`. |
 | `Services/Precios.cs` | La única regla de precios: qué se cobra (normal o de lanzamiento), qué se tacha y el porcentaje de descuento. |
 | `Services/ArmarCarta.cs` | Arma la carta que recibe la página (`Models/Carta.cs`) con los precios de hoy ya calculados. |
 | `wwwroot/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Ícono de la pestaña, del iPhone y de Android (la "A" roja del logo sobre negro). |
@@ -179,11 +182,13 @@ Los productos que traen gaseosa muestran arriba de la descripción un cartelito:
 No se carga a mano: sale de la columna `gaseosas_a_elegir` (0 = no se muestra). Así el cartelito siempre coincide con las gaseosas que el cliente elige al tocar "+".
 Las papas y el resto van en la descripción. La descripción no menciona la gaseosa, para no repetirla.
 
-## Gaseosas a elección
+## Gaseosas y salsas a elección
 
-Algunos productos (Combo individual, Combo para 2 y 3, Familiar para 4, 5 y 6, menú niños y hamburguesas XL) llevan gaseosas a elección, una por persona. Se define con la columna `gaseosas_a_elegir` de `productos` (0 = ninguna).
-Las opciones son los productos de la categoría `bebidas`: si marcás una como agotada, deja de ofrecerse en todos los combos.
-El cliente las elige en una ventana al tocar "+", y quedan guardadas en `pedido_items.detalle` (ejemplo: "2 × Coca-Cola, 1 × Sprite").
+Algunos productos (Combo individual, Combo para 2 y 3, Familiar para 4, 5 y 6, menú niños y hamburguesas XL) llevan gaseosas y salsas a elección, una de cada por persona. Se define con las columnas `gaseosas_a_elegir` y `salsas_a_elegir` de `productos` (0 = ninguna).
+- Las gaseosas son los productos de la categoría `bebidas`. Las salsas están en su propia tabla, `salsas` (Chick-fil-A, CRAVE, Honey gold, Hot mayo), porque no se venden sueltas: no aparecen como tarjetas en la carta.
+- Si en el panel marcás una gaseosa o una salsa como agotada, deja de ofrecerse en todos los combos.
+- El cliente elige todo en una sola ventana al tocar "+": un bloque de Gaseosas y otro de Salsas. Cada bloque tiene un botón "No quiero gaseosa" / "No quiero salsa"; el precio no cambia.
+- Queda guardado en `pedido_items.detalle`, por ejemplo: "Gaseosas: 2 × Coca-Cola, 1 × Sprite, 1 × Fanta; Salsas: 3 × CRAVE, 1 × Hot mayo" o "Sin gaseosa; Salsa: Honey gold". Las reglas (cuántas hacen falta, "No quiero...", agotadas) están en `Services/Opciones.cs`, y el JavaScript arma el mismo texto para mostrarlo en el cajón.
 
 ## Panel de administración (/admin)
 

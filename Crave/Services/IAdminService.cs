@@ -10,4 +10,6 @@ public interface IAdminService
     Task<ResultadoAdmin> CambiarPago(long id, bool confirmado);   // marcar o desmarcar "transferencia recibida"
     Task<List<ProductoAdmin>> Productos();
     Task<ResultadoAdmin> CambiarAgotado(string id, bool agotado);
+    Task<List<Salsa>> Salsas();
+    Task<ResultadoAdmin> CambiarSalsaAgotada(string id, bool agotado);
 }

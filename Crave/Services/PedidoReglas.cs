@@ -14,9 +14,9 @@ public static class PedidoReglas
     public const int MaxPiso = 30;
     public const int MaxReferencias = 200;
     public const int MaxNotas = 300;
-    public const int MaxIdTexto = 50;         // ids de producto, de zona y de gaseosa
+    public const int MaxIdTexto = 50;         // ids de producto, de zona, de gaseosa y de salsa
     public const int MaxRenglones = 60;       // renglones del pedido (los combos con gaseosas van de a uno)
-    public const int MaxGaseosasPorRenglon = 200;
+    public const int MaxGaseosasPorRenglon = 200;   // también es el máximo de salsas por renglón
     public const int MaxAbonaCon = 1_000_000;
 
     // ---------- Antispam ----------
@@ -56,9 +56,11 @@ public static class PedidoReglas
                 return new List<string> { "Faltan datos del pedido." };
 
             item.Gaseosas ??= new List<string>();   // sin gaseosas es lo mismo que una lista vacía
+            item.Salsas ??= new List<string>();     // lo mismo con las salsas
 
-            if (item.ProductoId.Length > MaxIdTexto || item.Gaseosas.Count > MaxGaseosasPorRenglon
-                || item.Gaseosas.Any(g => g is not null && g.Length > MaxIdTexto))
+            if (item.ProductoId.Length > MaxIdTexto
+                || item.Gaseosas.Count > MaxGaseosasPorRenglon || item.Gaseosas.Any(g => g is not null && g.Length > MaxIdTexto)
+                || item.Salsas.Count > MaxGaseosasPorRenglon || item.Salsas.Any(s => s is not null && s.Length > MaxIdTexto))
                 errores.Add("Hay un producto con datos que no son válidos.");
         }
 
